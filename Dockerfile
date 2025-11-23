@@ -5,7 +5,7 @@
 # ==============================================================================
 
 # Stage 1: Builder
-FROM rust:1.75-slim-bullseye AS builder
+FROM rust:1.91-slim-bullseye AS builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
