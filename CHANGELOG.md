@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Detailed ASCII architecture diagram based on actual code implementation analysis
+- Security analysis section with verified safe-by-design principles
+- Complete 8-stage security pipeline documentation showing data flow through all modules
+- Trust boundary documentation showing where user input is segregated from execution
+- Areas for improvement section identifying 6 specific security enhancements needed
+
+### Changed
+- ARCHITECTURE.md now includes actual implementation details verified from source code
+- Reorganized documentation to show both actual implementation and high-level overview
+
+### Added
 - Created CLAUDE.md documentation file for Claude Code instances
   - Comprehensive build, test, and run commands
   - High-level architecture overview including 8-stage validation pipeline
