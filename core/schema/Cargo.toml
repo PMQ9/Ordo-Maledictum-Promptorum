@@ -1,0 +1,17 @@
+[package]
+name = "intent-schema"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+validator.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+jsonschema.workspace = true
+sha2 = "0.10"
+
+[dev-dependencies]
+rand = "0.8"

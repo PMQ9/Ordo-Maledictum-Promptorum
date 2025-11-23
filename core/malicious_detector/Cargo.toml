@@ -1,0 +1,11 @@
+[package]
+name = "malicious-detector"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+intent-schema = { path = "../schema" }
+regex.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+tracing.workspace = true

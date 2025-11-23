@@ -1,0 +1,57 @@
+{
+  "default_config": {
+    "allowed_actions": [
+      "find_experts",
+      "summarize",
+      "draft_proposal",
+      "analyze_document",
+      "generate_report",
+      "search_knowledge"
+    ],
+    "allowed_expertise": [
+      "security",
+      "machine_learning",
+      "ml",
+      "embedded",
+      "cloud",
+      "devops",
+      "data_science",
+      "cybersecurity"
+    ],
+    "max_budget": 50000,
+    "allowed_domains": [
+      "supply_chain",
+      "cybersecurity",
+      "software_development",
+      "data_analytics"
+    ]
+  },
+  "restrictive_config": {
+    "allowed_actions": [
+      "find_experts",
+      "summarize"
+    ],
+    "allowed_expertise": [
+      "security"
+    ],
+    "max_budget": 10000,
+    "allowed_domains": [
+      "cybersecurity"
+    ]
+  },
+  "permissive_config": {
+    "allowed_actions": [
+      "find_experts",
+      "summarize",
+      "draft_proposal",
+      "analyze_document",
+      "generate_report",
+      "search_knowledge",
+      "create_project",
+      "schedule_meeting"
+    ],
+    "allowed_expertise": [],
+    "max_budget": null,
+    "allowed_domains": []
+  }
+}

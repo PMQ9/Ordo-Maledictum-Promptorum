@@ -1,0 +1,28 @@
+[package]
+name = "intent-api"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+intent-schema = { path = "../core/schema" }
+malicious-detector = { path = "../core/malicious_detector" }
+intent-parsers = { path = "../core/parsers" }
+intent-voting = { path = "../core/voting" }
+intent-comparator = { path = "../core/comparator" }
+intent-generator = { path = "../core/intent_generator" }
+processing-engine = { path = "../core/processing_engine" }
+intent-ledger = { path = "../core/ledger" }
+intent-supervision = { path = "../core/supervision" }
+intent-notifications = { path = "../core/notifications" }
+
+tokio.workspace = true
+axum.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sqlx.workspace = true
+config.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+anyhow.workspace = true

@@ -1,0 +1,119 @@
+version: 2
+updates:
+  # Cargo dependencies
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "intent-segregation-team"
+    assignees:
+      - "intent-segregation-team"
+    labels:
+      - "dependencies"
+      - "rust"
+    commit-message:
+      prefix: "cargo"
+      prefix-development: "cargo-dev"
+    ignore:
+      # Ignore major version updates for now (require manual review)
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      tokio-ecosystem:
+        patterns:
+          - "tokio*"
+          - "tower*"
+      serde-ecosystem:
+        patterns:
+          - "serde*"
+      axum-ecosystem:
+        patterns:
+          - "axum*"
+          - "tower-http*"
+
+  # NPM dependencies (frontend)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "intent-segregation-team"
+    assignees:
+      - "intent-segregation-team"
+    labels:
+      - "dependencies"
+      - "frontend"
+      - "javascript"
+    commit-message:
+      prefix: "npm"
+      prefix-development: "npm-dev"
+    ignore:
+      # Ignore major version updates for now (require manual review)
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react*"
+          - "@types/react*"
+      vite-ecosystem:
+        patterns:
+          - "vite*"
+          - "@vitejs/*"
+      eslint-ecosystem:
+        patterns:
+          - "eslint*"
+          - "@eslint/*"
+      typescript-ecosystem:
+        patterns:
+          - "typescript*"
+          - "@typescript-eslint/*"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "intent-segregation-team"
+    assignees:
+      - "intent-segregation-team"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "docker"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "intent-segregation-team"
+    assignees:
+      - "intent-segregation-team"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci-cd"
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions-ecosystem:
+        patterns:
+          - "actions/*"
+          - "github/*"

@@ -1,0 +1,62 @@
+# Code Owners for Intent Segregation Project
+#
+# These owners will be the default owners for everything in the repo.
+# Unless a later match takes precedence, they will be requested for
+# review when someone opens a pull request.
+#
+# Documentation: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners - all files
+* @intent-segregation-team
+
+# Core Rust modules
+/core/ @intent-segregation-team @security-team
+/core/schema/ @intent-segregation-team
+/core/malicious_detector/ @intent-segregation-team @security-team
+/core/parsers/ @intent-segregation-team
+/core/voting/ @intent-segregation-team
+/core/comparator/ @intent-segregation-team @security-team
+/core/intent_generator/ @intent-segregation-team @security-team
+/core/processing_engine/ @intent-segregation-team
+/core/ledger/ @intent-segregation-team @security-team
+/core/supervision/ @intent-segregation-team
+/core/notifications/ @intent-segregation-team
+
+# API
+/api/ @intent-segregation-team @backend-team
+
+# Frontend
+/frontend/ @intent-segregation-team @frontend-team
+
+# Configuration
+/config/ @intent-segregation-team @devops-team
+*.toml @intent-segregation-team
+Cargo.lock @intent-segregation-team
+
+# Infrastructure and DevOps
+/Dockerfile @intent-segregation-team @devops-team
+/docker-compose.yml @intent-segregation-team @devops-team
+/.github/ @intent-segregation-team @devops-team
+/.github/workflows/ @intent-segregation-team @devops-team
+/.github/CODEOWNERS @intent-segregation-team
+
+# Scripts
+*.sh @intent-segregation-team @devops-team
+
+# Tests
+/tests/ @intent-segregation-team
+/tests/redteam/ @intent-segregation-team @security-team
+
+# Documentation
+*.md @intent-segregation-team @docs-team
+/docs/ @intent-segregation-team @docs-team
+
+# Security-sensitive files
+/.env* @intent-segregation-team @security-team
+/config/provider_config.json @intent-segregation-team @security-team
+
+# CI/CD
+/.github/workflows/security.yml @intent-segregation-team @security-team @devops-team
+/.github/workflows/docker.yml @intent-segregation-team @devops-team
+/.github/workflows/release.yml @intent-segregation-team @devops-team
+/.github/dependabot.yml @intent-segregation-team @devops-team

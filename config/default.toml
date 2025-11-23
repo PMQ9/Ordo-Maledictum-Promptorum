@@ -1,0 +1,116 @@
+# Intent Segregation API - Default Configuration
+#
+# This file contains all the default settings for the API server.
+# Settings can be overridden by:
+# 1. Creating a config/local.toml file (for local development)
+# 2. Using environment variables (prefixed with APP__, e.g., APP__SERVER__PORT=8080)
+
+# ============================================================================
+# Server Configuration
+# ============================================================================
+[server]
+# Port the HTTP server will listen on
+port = 3000
+
+# Path to frontend static files (optional)
+# If set, the server will serve frontend files from this directory
+# Example: frontend_path = "/app/frontend/dist"
+frontend_path = "../frontend/dist"
+
+# Request timeout in seconds
+request_timeout_secs = 30
+
+# ============================================================================
+# Database Configuration
+# ============================================================================
+[database]
+# PostgreSQL connection URL
+# Format: postgresql://username:password@host:port/database
+url = "postgresql://intent_user:intent_pass@localhost:5432/intent_db"
+
+# Maximum number of connections in the connection pool
+max_connections = 10
+
+# ============================================================================
+# Parser Configuration
+# ============================================================================
+[parsers]
+# Enable/disable individual parsers
+enable_deterministic = true
+enable_openai = false
+enable_ollama = false
+
+# OpenAI Configuration (only used if enable_openai = true)
+# openai_api_key = "sk-..."  # Set via environment variable: APP__PARSERS__OPENAI_API_KEY
+openai_model = "gpt-4"
+
+# Ollama Configuration (only used if enable_ollama = true)
+ollama_endpoint = "http://localhost:11434"
+ollama_model = "llama2"
+
+# ============================================================================
+# Provider Policy Configuration
+# ============================================================================
+[provider]
+# List of allowed actions
+# Valid values: "find_experts", "summarize", "draft_proposal"
+allowed_actions = [
+    "find_experts",
+    "summarize",
+    "draft_proposal"
+]
+
+# List of allowed expertise areas (empty list = all allowed)
+# Valid values: "ml", "security", "embedded", "cloud", "frontend", "backend", "devops", "data"
+allowed_expertise = [
+    "ml",
+    "security",
+    "embedded",
+    "cloud"
+]
+
+# Maximum budget allowed (in dollars)
+max_budget = 50000
+
+# Maximum number of results allowed
+max_results = 20
+
+# Require human approval for all requests (default: false)
+# When true, all requests will require human approval regardless of voting/comparison results
+require_human_approval = false
+
+# ============================================================================
+# Notifications Configuration
+# ============================================================================
+[notifications]
+# Enable email notifications for approval requests
+enable_email = false
+
+# SMTP server configuration (only used if enable_email = true)
+# smtp_host = "smtp.gmail.com"
+# smtp_port = 587
+# smtp_username = "your-email@gmail.com"
+# smtp_password = "your-app-password"  # Set via environment variable: APP__NOTIFICATIONS__SMTP_PASSWORD
+# from_email = "intent-system@example.com"
+
+# Admin email addresses to receive approval notifications
+admin_emails = [
+    # "admin@example.com",
+    # "security@example.com"
+]
+
+# ============================================================================
+# Environment Variable Overrides
+# ============================================================================
+#
+# You can override any setting using environment variables:
+#
+# export APP__SERVER__PORT=8080
+# export APP__DATABASE__URL="postgresql://user:pass@db:5432/mydb"
+# export APP__PARSERS__OPENAI_API_KEY="sk-..."
+# export APP__PARSERS__ENABLE_OPENAI=true
+# export APP__PROVIDER__MAX_BUDGET=100000
+# export APP__NOTIFICATIONS__ENABLE_EMAIL=true
+# export APP__NOTIFICATIONS__SMTP_PASSWORD="secret"
+#
+# Note: Use double underscores (__) to separate nested keys

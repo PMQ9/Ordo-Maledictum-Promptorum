@@ -1,0 +1,15 @@
+[package]
+name = "intent-voting"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+intent-schema = { path = "../schema" }
+serde.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+chrono.workspace = true
+uuid.workspace = true

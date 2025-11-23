@@ -1,0 +1,16 @@
+[package]
+name = "intent-supervision"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+intent-schema = { path = "../schema" }
+intent-notifications = { path = "../notifications" }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+chrono.workspace = true
+async-trait = "0.1"

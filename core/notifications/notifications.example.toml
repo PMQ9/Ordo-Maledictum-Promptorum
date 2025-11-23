@@ -1,0 +1,79 @@
+# Example Notification Configuration
+# Copy this file to notifications.toml and fill in your actual credentials
+
+[notifications.slack]
+# Slack webhook URL - Get this from https://api.slack.com/messaging/webhooks
+webhook_url = "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+
+# Optional: Default channel override (webhook usually has a default)
+# default_channel = "#security-alerts"
+
+# Bot username to display in Slack
+username = "Intent Security Bot"
+
+[notifications.teams]
+# Microsoft Teams webhook URL - Get this from Teams channel connectors
+webhook_url = "https://outlook.office.com/webhook/YOUR/WEBHOOK/URL"
+
+# Theme color for message cards (hex color without #)
+# Default: 0076D7 (Microsoft Blue)
+theme_color = "0076D7"
+
+[notifications.email]
+# SMTP server configuration
+smtp_server = "smtp.gmail.com"
+
+# SMTP port (587 for STARTTLS, 465 for SSL/TLS)
+smtp_port = 587
+
+# SMTP authentication credentials
+smtp_user = "your-email@example.com"
+smtp_password = "your-app-password"
+
+# From address for outgoing emails
+from_address = "your-email@example.com"
+
+# Display name for the sender
+from_name = "Intent Security System"
+
+# Use STARTTLS encryption (recommended)
+use_starttls = true
+
+# ============================================================================
+# Configuration Notes:
+# ============================================================================
+#
+# SLACK SETUP:
+# 1. Go to https://api.slack.com/messaging/webhooks
+# 2. Create an incoming webhook for your workspace
+# 3. Copy the webhook URL and paste it above
+#
+# TEAMS SETUP:
+# 1. In Microsoft Teams, navigate to the channel you want to receive notifications
+# 2. Click "..." > "Connectors" > "Configure"
+# 3. Search for "Incoming Webhook" and click "Configure"
+# 4. Name your webhook (e.g., "Intent Security") and optionally upload an image
+# 5. Copy the webhook URL and paste it above
+#
+# EMAIL SETUP (Gmail):
+# 1. Enable 2-factor authentication on your Google account
+# 2. Generate an app-specific password:
+#    - Go to https://myaccount.google.com/apppasswords
+#    - Select "Mail" and your device
+#    - Copy the generated password
+# 3. Use this app password in smtp_password (not your regular password)
+#
+# EMAIL SETUP (Other providers):
+# Common SMTP servers:
+# - Gmail: smtp.gmail.com:587 (STARTTLS)
+# - Outlook: smtp-mail.outlook.com:587 (STARTTLS)
+# - Yahoo: smtp.mail.yahoo.com:587 (STARTTLS)
+# - SendGrid: smtp.sendgrid.net:587 (STARTTLS)
+# - Amazon SES: email-smtp.us-east-1.amazonaws.com:587 (STARTTLS)
+#
+# SECURITY NOTES:
+# - Never commit this file with real credentials to version control
+# - Add notifications.toml to your .gitignore
+# - Consider using environment variables or a secrets manager for production
+# - Rotate credentials regularly
+# - Use app-specific passwords when available (like Gmail)

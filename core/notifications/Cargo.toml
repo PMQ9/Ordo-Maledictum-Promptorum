@@ -1,0 +1,15 @@
+[package]
+name = "intent-notifications"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+tokio.workspace = true
+reqwest.workspace = true
+lettre.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+config.workspace = true
+regex.workspace = true

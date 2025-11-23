@@ -1,0 +1,177 @@
+{
+  "provider_configs": {
+    "b2b_consulting": {
+      "name": "B2B Consulting Service",
+      "description": "Configuration for B2B consulting automation platform",
+      "allowed_actions": [
+        "find_experts",
+        "summarize",
+        "draft_proposal",
+        "analyze_document",
+        "generate_report"
+      ],
+      "allowed_expertise": [
+        "machine_learning",
+        "embedded",
+        "security",
+        "cloud",
+        "backend",
+        "data_science"
+      ],
+      "max_budget": 100000,
+      "max_results": 50,
+      "require_human_approval": true,
+      "custom_constraints": {
+        "allowed_topics": [
+          "supply_chain",
+          "cybersecurity",
+          "ai_infrastructure",
+          "cloud_migration",
+          "data_analytics"
+        ],
+        "forbidden_actions": [
+          "delete",
+          "modify_records",
+          "access_admin",
+          "export_all_data"
+        ],
+        "max_document_size_mb": 10,
+        "allowed_file_types": ["pdf", "docx", "txt", "md"]
+      }
+    },
+    "customer_service": {
+      "name": "Customer Service Portal",
+      "description": "Configuration for customer support AI assistant",
+      "allowed_actions": [
+        "summarize",
+        "search_knowledge",
+        "analyze_document"
+      ],
+      "allowed_expertise": [],
+      "max_budget": null,
+      "max_results": 10,
+      "require_human_approval": false,
+      "custom_constraints": {
+        "allowed_topics": [
+          "product_support",
+          "billing_inquiry",
+          "account_management",
+          "technical_support"
+        ],
+        "forbidden_actions": [
+          "delete_account",
+          "refund",
+          "modify_billing",
+          "access_admin",
+          "execute_command"
+        ],
+        "max_document_size_mb": 5,
+        "allowed_file_types": ["pdf", "txt", "jpg", "png"],
+        "pii_handling": "redact",
+        "session_timeout_minutes": 30
+      }
+    },
+    "phone_tree_ivr": {
+      "name": "Phone Tree IVR System",
+      "description": "Configuration for interactive voice response system",
+      "allowed_actions": [
+        "search_knowledge"
+      ],
+      "allowed_expertise": [],
+      "max_budget": null,
+      "max_results": 5,
+      "require_human_approval": false,
+      "custom_constraints": {
+        "allowed_topics": [
+          "store_hours",
+          "product_info",
+          "order_status",
+          "general_inquiry"
+        ],
+        "forbidden_actions": [
+          "transfer_to_admin",
+          "password_reset",
+          "account_access",
+          "financial_transaction",
+          "execute_command",
+          "system_command"
+        ],
+        "max_call_duration_seconds": 300,
+        "allowed_languages": ["en", "es", "fr"],
+        "escalation_triggers": [
+          "security_concern",
+          "fraud_detection",
+          "payment_issue"
+        ]
+      }
+    },
+    "restrictive_demo": {
+      "name": "Highly Restrictive Demo",
+      "description": "Minimal permissions for testing security boundaries",
+      "allowed_actions": [
+        "summarize"
+      ],
+      "allowed_expertise": [
+        "security"
+      ],
+      "max_budget": 1000,
+      "max_results": 3,
+      "require_human_approval": true,
+      "custom_constraints": {
+        "allowed_topics": [
+          "security_review"
+        ],
+        "forbidden_actions": [
+          "find_experts",
+          "draft_proposal",
+          "analyze_document",
+          "generate_report",
+          "delete",
+          "modify",
+          "admin",
+          "execute"
+        ],
+        "max_document_size_mb": 1,
+        "allowed_file_types": ["txt"]
+      }
+    },
+    "development_testing": {
+      "name": "Development Testing Environment",
+      "description": "Permissive configuration for development and testing",
+      "allowed_actions": [
+        "find_experts",
+        "summarize",
+        "draft_proposal",
+        "analyze_document",
+        "generate_report",
+        "search_knowledge"
+      ],
+      "allowed_expertise": [
+        "machine_learning",
+        "embedded",
+        "security",
+        "cloud",
+        "backend",
+        "frontend",
+        "devops",
+        "data_science"
+      ],
+      "max_budget": 999999,
+      "max_results": 100,
+      "require_human_approval": false,
+      "custom_constraints": {
+        "allowed_topics": [],
+        "forbidden_actions": [],
+        "max_document_size_mb": 50,
+        "allowed_file_types": ["*"],
+        "enable_verbose_logging": true,
+        "disable_rate_limiting": true
+      }
+    }
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-11-23",
+    "schema_version": "1.0"
+  }
+}

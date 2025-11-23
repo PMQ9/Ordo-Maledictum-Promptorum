@@ -1,0 +1,106 @@
+{
+  "parser_responses": {
+    "find_experts_consensus": [
+      {
+        "parser_id": "deterministic_parser",
+        "confidence": 0.98,
+        "intent": {
+          "action": "find_experts",
+          "topic_id": "supply_chain_security",
+          "expertise": ["security"],
+          "constraints": {
+            "max_results": 10
+          }
+        }
+      },
+      {
+        "parser_id": "llm_parser_1",
+        "confidence": 0.95,
+        "intent": {
+          "action": "find_experts",
+          "topic_id": "supply_chain_security",
+          "expertise": ["security"],
+          "constraints": {
+            "max_results": 10
+          }
+        }
+      },
+      {
+        "parser_id": "llm_parser_2",
+        "confidence": 0.92,
+        "intent": {
+          "action": "find_experts",
+          "topic_id": "supply_chain_security",
+          "expertise": ["security", "supply_chain"],
+          "constraints": {
+            "max_results": 10
+          }
+        }
+      }
+    ],
+    "parser_disagreement": [
+      {
+        "parser_id": "deterministic_parser",
+        "confidence": 0.85,
+        "intent": {
+          "action": "find_experts",
+          "topic_id": "ai_project",
+          "expertise": ["machine_learning"],
+          "constraints": {}
+        }
+      },
+      {
+        "parser_id": "llm_parser_1",
+        "confidence": 0.70,
+        "intent": {
+          "action": "draft_proposal",
+          "topic_id": "ai_implementation",
+          "expertise": ["ai", "consulting"],
+          "constraints": {}
+        }
+      },
+      {
+        "parser_id": "llm_parser_2",
+        "confidence": 0.65,
+        "intent": {
+          "action": "summarize",
+          "topic_id": "ai_research",
+          "expertise": [],
+          "constraints": {}
+        }
+      }
+    ],
+    "parser_conflict": [
+      {
+        "parser_id": "deterministic_parser",
+        "confidence": 0.50,
+        "intent": {
+          "action": "find_experts",
+          "topic_id": "project_a",
+          "expertise": ["security"],
+          "constraints": {}
+        }
+      },
+      {
+        "parser_id": "llm_parser_1",
+        "confidence": 0.45,
+        "intent": {
+          "action": "delete_data",
+          "topic_id": "system_cleanup",
+          "expertise": [],
+          "constraints": {}
+        }
+      },
+      {
+        "parser_id": "llm_parser_2",
+        "confidence": 0.40,
+        "intent": {
+          "action": "grant_access",
+          "topic_id": "permissions",
+          "expertise": [],
+          "constraints": {}
+        }
+      }
+    ]
+  }
+}
