@@ -1,6 +1,7 @@
 use chrono::Utc;
 use intent_schema::{
-    Action, Constraints, GenerationMetadata as IntentMetadata, SchemaError, TrustedIntent, VotedIntent,
+    Action, Constraints, GenerationMetadata as IntentMetadata, SchemaError, TrustedIntent,
+    VotedIntent,
 };
 use serde_json;
 use std::collections::HashSet;
@@ -161,8 +162,7 @@ impl TrustedIntentGenerator {
 
     /// Validate that the action is allowed
     fn validate_action(&self, action: &Action) -> Result<(), GeneratorError> {
-        if !self.config.allowed_actions.is_empty()
-            && !self.config.allowed_actions.contains(action)
+        if !self.config.allowed_actions.is_empty() && !self.config.allowed_actions.contains(action)
         {
             return Err(GeneratorError::SanitizationError(format!(
                 "Action {:?} is not in the allowed list",
@@ -382,16 +382,16 @@ impl TrustedIntentGenerator {
     /// Replace with actual cryptographic implementation based on requirements.
     async fn sign_intent(&self, intent: &TrustedIntent) -> Result<String, GeneratorError> {
         // Verify we have a signing key
-        let _key = self
-            .config
-            .signing_key
-            .as_ref()
-            .ok_or_else(|| GeneratorError::SignatureError("No signing key configured".to_string()))?;
+        let _key = self.config.signing_key.as_ref().ok_or_else(|| {
+            GeneratorError::SignatureError("No signing key configured".to_string())
+        })?;
 
         // Create the data to sign (use the content hash for consistency)
         let data_to_sign = format!(
             "{}:{}:{}",
-            intent.id, intent.timestamp.to_rfc3339(), intent.content_hash
+            intent.id,
+            intent.timestamp.to_rfc3339(),
+            intent.content_hash
         );
 
         // TODO: Implement actual cryptographic signing
@@ -420,7 +420,7 @@ impl TrustedIntentGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use intent_schema::{Expertise, Action, ParsedIntent};
+    use intent_schema::{Action, Expertise, ParsedIntent};
 
     fn create_test_voted_intent() -> VotedIntent {
         VotedIntent {
@@ -556,7 +556,10 @@ mod tests {
 
         // Should have a signature
         assert!(trusted.signature.is_some());
-        assert!(trusted.signature.unwrap().starts_with("SIGNATURE_PLACEHOLDER_"));
+        assert!(trusted
+            .signature
+            .unwrap()
+            .starts_with("SIGNATURE_PLACEHOLDER_"));
     }
 
     #[tokio::test]
@@ -588,8 +591,8 @@ mod tests {
         voted_intent.expertise = vec![
             Expertise::Security,
             Expertise::MachineLearning,
-            Expertise::Security, // Duplicate
-            Expertise::MachineLearning,       // Duplicate
+            Expertise::Security,        // Duplicate
+            Expertise::MachineLearning, // Duplicate
             Expertise::Cloud,
         ];
 

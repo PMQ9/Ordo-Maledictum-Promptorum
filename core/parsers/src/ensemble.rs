@@ -36,16 +36,12 @@ impl EnsembleResult {
 
     /// Get the result from the Ollama parser if available
     pub fn get_ollama(&self) -> Option<&ParsedIntent> {
-        self.results
-            .iter()
-            .find(|r| r.parser_id == "ollama_v1")
+        self.results.iter().find(|r| r.parser_id == "ollama_v1")
     }
 
     /// Get the result from the OpenAI parser if available
     pub fn get_openai(&self) -> Option<&ParsedIntent> {
-        self.results
-            .iter()
-            .find(|r| r.parser_id == "openai_v1")
+        self.results.iter().find(|r| r.parser_id == "openai_v1")
     }
 
     /// Get the highest confidence result
@@ -97,15 +93,21 @@ impl ParserEnsemble {
     }
 
     /// Run all parsers in parallel
-    pub async fn parse_all(&self, user_input: &str, user_id: &str, session_id: &str) -> EnsembleResult {
+    pub async fn parse_all(
+        &self,
+        user_input: &str,
+        user_id: &str,
+        session_id: &str,
+    ) -> EnsembleResult {
         let start = Instant::now();
 
         if self.parsers.is_empty() {
             return EnsembleResult {
                 results: Vec::new(),
-                errors: vec![("ensemble".to_string(), ParserError::ConfigError(
-                    "No parsers enabled in ensemble".to_string(),
-                ))],
+                errors: vec![(
+                    "ensemble".to_string(),
+                    ParserError::ConfigError("No parsers enabled in ensemble".to_string()),
+                )],
                 total_time_ms: 0,
                 parsers_count: 0,
                 success_count: 0,
@@ -201,7 +203,11 @@ mod tests {
         assert_eq!(ensemble.parser_count(), 1);
 
         let result = ensemble
-            .parse_all("Find experts in machine learning", "test_user", "test_session")
+            .parse_all(
+                "Find experts in machine learning",
+                "test_user",
+                "test_session",
+            )
             .await;
 
         assert_eq!(result.success_count, 1);

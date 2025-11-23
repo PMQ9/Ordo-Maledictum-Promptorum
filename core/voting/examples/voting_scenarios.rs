@@ -66,11 +66,20 @@ async fn scenario_1_high_confidence() {
             println!("  Action: {:?}", result.canonical_intent.action);
             println!("  Topic: {:?}", result.canonical_intent.topic);
             println!("  Expertise: {:?}", result.canonical_intent.expertise);
-            println!("  Max Budget: {:?}", result.canonical_intent.constraints.max_budget);
+            println!(
+                "  Max Budget: {:?}",
+                result.canonical_intent.constraints.max_budget
+            );
             println!("\nComparison Details:");
             println!("  Parsers: {}", result.comparison_details.parser_count);
-            println!("  Avg Similarity: {:.2}%", result.comparison_details.average_similarity * 100.0);
-            println!("  Min Similarity: {:.2}%", result.comparison_details.min_similarity * 100.0);
+            println!(
+                "  Avg Similarity: {:.2}%",
+                result.comparison_details.average_similarity * 100.0
+            );
+            println!(
+                "  Min Similarity: {:.2}%",
+                result.comparison_details.min_similarity * 100.0
+            );
         }
         Err(e) => println!("Error: {}", e),
     }
@@ -132,15 +141,28 @@ async fn scenario_2_low_confidence() {
             println!("  Action: {:?}", result.canonical_intent.action);
             println!("  Topic: {:?}", result.canonical_intent.topic);
             println!("  Expertise: {:?}", result.canonical_intent.expertise);
-            println!("  Max Budget: {:?}", result.canonical_intent.constraints.max_budget);
+            println!(
+                "  Max Budget: {:?}",
+                result.canonical_intent.constraints.max_budget
+            );
             println!("\nComparison Details:");
             println!("  Parsers: {}", result.comparison_details.parser_count);
-            println!("  Avg Similarity: {:.2}%", result.comparison_details.average_similarity * 100.0);
-            println!("  Min Similarity: {:.2}%", result.comparison_details.min_similarity * 100.0);
+            println!(
+                "  Avg Similarity: {:.2}%",
+                result.comparison_details.average_similarity * 100.0
+            );
+            println!(
+                "  Min Similarity: {:.2}%",
+                result.comparison_details.min_similarity * 100.0
+            );
             println!("\nPairwise Differences:");
             for diff in &result.comparison_details.pairwise_diffs {
-                println!("  {} vs {}: {:.2}% similar", 
-                    diff.parser1, diff.parser2, diff.diff.similarity_score * 100.0);
+                println!(
+                    "  {} vs {}: {:.2}% similar",
+                    diff.parser1,
+                    diff.parser2,
+                    diff.diff.similarity_score * 100.0
+                );
                 if let Some(ref topic_diff) = diff.diff.topic_diff {
                     println!("    Topic: {}", topic_diff);
                 }
@@ -212,15 +234,28 @@ async fn scenario_3_conflict() {
             println!("  Action: {:?}", result.canonical_intent.action);
             println!("  Topic: {:?}", result.canonical_intent.topic);
             println!("  Expertise: {:?}", result.canonical_intent.expertise);
-            println!("  Max Budget: {:?}", result.canonical_intent.constraints.max_budget);
+            println!(
+                "  Max Budget: {:?}",
+                result.canonical_intent.constraints.max_budget
+            );
             println!("\nComparison Details:");
             println!("  Parsers: {}", result.comparison_details.parser_count);
-            println!("  Avg Similarity: {:.2}%", result.comparison_details.average_similarity * 100.0);
-            println!("  Min Similarity: {:.2}%", result.comparison_details.min_similarity * 100.0);
+            println!(
+                "  Avg Similarity: {:.2}%",
+                result.comparison_details.average_similarity * 100.0
+            );
+            println!(
+                "  Min Similarity: {:.2}%",
+                result.comparison_details.min_similarity * 100.0
+            );
             println!("\nPairwise Differences:");
             for diff in &result.comparison_details.pairwise_diffs {
-                println!("  {} vs {}: {:.2}% similar", 
-                    diff.parser1, diff.parser2, diff.diff.similarity_score * 100.0);
+                println!(
+                    "  {} vs {}: {:.2}% similar",
+                    diff.parser1,
+                    diff.parser2,
+                    diff.diff.similarity_score * 100.0
+                );
                 if let Some(ref action_diff) = diff.diff.action_diff {
                     println!("    Action: {}", action_diff);
                 }

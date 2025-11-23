@@ -1,6 +1,6 @@
-use crate::config::{NotificationConfig, EmailConfig};
+use crate::config::{EmailConfig, NotificationConfig};
 use crate::error::{NotificationError, Result};
-use crate::types::{EmailMessage, SlackMessage, TeamsMessage, ApprovalRequest, Alert};
+use crate::types::{Alert, ApprovalRequest, EmailMessage, SlackMessage, TeamsMessage};
 use lettre::{
     message::{header::ContentType, Message, MultiPart, SinglePart},
     transport::smtp::authentication::Credentials,
@@ -8,7 +8,7 @@ use lettre::{
 };
 use reqwest::Client;
 use serde_json::json;
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
 /// Notification service for sending emails, Slack, and Teams messages
 #[derive(Debug, Clone)]
@@ -55,32 +55,43 @@ impl NotificationService {
     /// # }
     /// ```
     pub async fn send_email(&self, message: &EmailMessage) -> Result<()> {
-        let email_config = self.config.email.as_ref()
-            .ok_or_else(|| NotificationError::MissingConfig("Email configuration not provided".to_string()))?;
+        let email_config = self.config.email.as_ref().ok_or_else(|| {
+            NotificationError::MissingConfig("Email configuration not provided".to_string())
+        })?;
 
         info!("Sending email to {:?}", message.to);
 
         // Validate recipients
         if message.to.is_empty() {
-            return Err(NotificationError::InvalidRecipient("No recipients specified".to_string()));
+            return Err(NotificationError::InvalidRecipient(
+                "No recipients specified".to_string(),
+            ));
         }
 
         // Build the email
-        let mut email_builder = Message::builder()
-            .from(format!("{} <{}>", email_config.from_name, email_config.from_address)
+        let mut email_builder = Message::builder().from(
+            format!("{} <{}>", email_config.from_name, email_config.from_address)
                 .parse()
-                .map_err(|e| NotificationError::EmailError(format!("Invalid from address: {}", e)))?);
+                .map_err(|e| {
+                    NotificationError::EmailError(format!("Invalid from address: {}", e))
+                })?,
+        );
 
         // Add recipients
         for recipient in &message.to {
-            email_builder = email_builder.to(recipient.parse()
-                .map_err(|e| NotificationError::InvalidRecipient(format!("Invalid recipient {}: {}", recipient, e)))?);
+            email_builder = email_builder.to(recipient.parse().map_err(|e| {
+                NotificationError::InvalidRecipient(format!(
+                    "Invalid recipient {}: {}",
+                    recipient, e
+                ))
+            })?);
         }
 
         // Add CC recipients
         for cc in &message.cc {
-            email_builder = email_builder.cc(cc.parse()
-                .map_err(|e| NotificationError::InvalidRecipient(format!("Invalid CC {}: {}", cc, e)))?);
+            email_builder = email_builder.cc(cc.parse().map_err(|e| {
+                NotificationError::InvalidRecipient(format!("Invalid CC {}: {}", cc, e))
+            })?);
         }
 
         // Set subject
@@ -94,19 +105,21 @@ impl NotificationService {
                         .singlepart(
                             SinglePart::builder()
                                 .header(ContentType::TEXT_PLAIN)
-                                .body(strip_html(&message.body))
+                                .body(strip_html(&message.body)),
                         )
                         .singlepart(
                             SinglePart::builder()
                                 .header(ContentType::TEXT_HTML)
-                                .body(message.body.clone())
-                        )
+                                .body(message.body.clone()),
+                        ),
                 )
-                .map_err(|e| NotificationError::EmailError(format!("Failed to build email: {}", e)))?
+                .map_err(|e| {
+                    NotificationError::EmailError(format!("Failed to build email: {}", e))
+                })?
         } else {
-            email_builder
-                .body(message.body.clone())
-                .map_err(|e| NotificationError::EmailError(format!("Failed to build email: {}", e)))?
+            email_builder.body(message.body.clone()).map_err(|e| {
+                NotificationError::EmailError(format!("Failed to build email: {}", e))
+            })?
         };
 
         // Send the email
@@ -118,26 +131,29 @@ impl NotificationService {
 
     /// Internal method to send email via SMTP
     async fn send_smtp_email(&self, email: Message, config: &EmailConfig) -> Result<()> {
-        let credentials = Credentials::new(
-            config.smtp_user.clone(),
-            config.smtp_password.clone(),
-        );
+        let credentials = Credentials::new(config.smtp_user.clone(), config.smtp_password.clone());
 
         let mailer = if config.use_starttls {
             AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&config.smtp_server)
-                .map_err(|e| NotificationError::EmailError(format!("SMTP connection failed: {}", e)))?
+                .map_err(|e| {
+                    NotificationError::EmailError(format!("SMTP connection failed: {}", e))
+                })?
                 .credentials(credentials)
                 .port(config.smtp_port)
                 .build()
         } else {
             AsyncSmtpTransport::<Tokio1Executor>::relay(&config.smtp_server)
-                .map_err(|e| NotificationError::EmailError(format!("SMTP connection failed: {}", e)))?
+                .map_err(|e| {
+                    NotificationError::EmailError(format!("SMTP connection failed: {}", e))
+                })?
                 .credentials(credentials)
                 .port(config.smtp_port)
                 .build()
         };
 
-        mailer.send(email).await
+        mailer
+            .send(email)
+            .await
             .map_err(|e| NotificationError::EmailError(format!("Failed to send email: {}", e)))?;
 
         Ok(())
@@ -172,8 +188,9 @@ impl NotificationService {
     /// # }
     /// ```
     pub async fn send_slack(&self, message: &SlackMessage) -> Result<()> {
-        let slack_config = self.config.slack.as_ref()
-            .ok_or_else(|| NotificationError::MissingConfig("Slack configuration not provided".to_string()))?;
+        let slack_config = self.config.slack.as_ref().ok_or_else(|| {
+            NotificationError::MissingConfig("Slack configuration not provided".to_string())
+        })?;
 
         info!("Sending Slack message");
 
@@ -202,7 +219,8 @@ impl NotificationService {
         }
 
         // Send the webhook request
-        let response = self.http_client
+        let response = self
+            .http_client
             .post(&slack_config.webhook_url)
             .json(&payload)
             .send()
@@ -210,9 +228,18 @@ impl NotificationService {
 
         if !response.status().is_success() {
             let status = response.status();
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
-            error!("Slack webhook failed with status {}: {}", status, error_text);
-            return Err(NotificationError::SlackError(format!("HTTP {}: {}", status, error_text)));
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
+            error!(
+                "Slack webhook failed with status {}: {}",
+                status, error_text
+            );
+            return Err(NotificationError::SlackError(format!(
+                "HTTP {}: {}",
+                status, error_text
+            )));
         }
 
         info!("Slack message sent successfully");
@@ -248,8 +275,9 @@ impl NotificationService {
     /// # }
     /// ```
     pub async fn send_teams(&self, message: &TeamsMessage) -> Result<()> {
-        let teams_config = self.config.teams.as_ref()
-            .ok_or_else(|| NotificationError::MissingConfig("Teams configuration not provided".to_string()))?;
+        let teams_config = self.config.teams.as_ref().ok_or_else(|| {
+            NotificationError::MissingConfig("Teams configuration not provided".to_string())
+        })?;
 
         info!("Sending Teams message");
 
@@ -279,7 +307,8 @@ impl NotificationService {
         }
 
         // Send the webhook request
-        let response = self.http_client
+        let response = self
+            .http_client
             .post(&teams_config.webhook_url)
             .json(&payload)
             .send()
@@ -287,9 +316,18 @@ impl NotificationService {
 
         if !response.status().is_success() {
             let status = response.status();
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
-            error!("Teams webhook failed with status {}: {}", status, error_text);
-            return Err(NotificationError::TeamsError(format!("HTTP {}: {}", status, error_text)));
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
+            error!(
+                "Teams webhook failed with status {}: {}",
+                status, error_text
+            );
+            return Err(NotificationError::TeamsError(format!(
+                "HTTP {}: {}",
+                status, error_text
+            )));
         }
 
         info!("Teams message sent successfully");
@@ -333,7 +371,10 @@ impl NotificationService {
         }
 
         if !errors.is_empty() {
-            return Err(NotificationError::ConfigError(format!("Some notifications failed: {}", errors.join(", "))));
+            return Err(NotificationError::ConfigError(format!(
+                "Some notifications failed: {}",
+                errors.join(", ")
+            )));
         }
 
         Ok(())
@@ -376,7 +417,10 @@ impl NotificationService {
         }
 
         if !errors.is_empty() {
-            return Err(NotificationError::ConfigError(format!("Some notifications failed: {}", errors.join(", "))));
+            return Err(NotificationError::ConfigError(format!(
+                "Some notifications failed: {}",
+                errors.join(", ")
+            )));
         }
 
         Ok(())
@@ -408,8 +452,13 @@ impl NotificationService {
             request.priority,
             request.description,
             request.intent_summary,
-            request.approval_url.as_ref()
-                .map(|url| format!("<p><a href=\"{}\">Click here to review and approve</a></p>", url))
+            request
+                .approval_url
+                .as_ref()
+                .map(|url| format!(
+                    "<p><a href=\"{}\">Click here to review and approve</a></p>",
+                    url
+                ))
                 .unwrap_or_default()
         );
 
@@ -483,7 +532,7 @@ impl NotificationService {
     }
 
     async fn send_approval_teams(&self, request: &ApprovalRequest) -> Result<()> {
-        use crate::types::{TeamsSection, TeamsFact, TeamsAction, TeamsActionTarget};
+        use crate::types::{TeamsAction, TeamsActionTarget, TeamsFact, TeamsSection};
 
         let color = match request.priority {
             crate::types::NotificationPriority::Critical => "FF0000",
@@ -514,7 +563,10 @@ impl NotificationService {
             activity_title: Some(request.title.clone()),
             activity_subtitle: Some(request.description.clone()),
             facts: Some(facts),
-            text: Some(format!("**Intent Summary:**\n```\n{}\n```", request.intent_summary)),
+            text: Some(format!(
+                "**Intent Summary:**\n```\n{}\n```",
+                request.intent_summary
+            )),
         }];
 
         let actions = request.approval_url.as_ref().map(|url| {
@@ -560,8 +612,13 @@ impl NotificationService {
             alert.timestamp,
             alert.title,
             alert.message,
-            alert.context.as_ref()
-                .map(|ctx| format!("<h3>Context</h3><pre>{}</pre>", serde_json::to_string_pretty(ctx).unwrap_or_default()))
+            alert
+                .context
+                .as_ref()
+                .map(|ctx| format!(
+                    "<h3>Context</h3><pre>{}</pre>",
+                    serde_json::to_string_pretty(ctx).unwrap_or_default()
+                ))
                 .unwrap_or_default()
         );
 
@@ -627,7 +684,7 @@ impl NotificationService {
     }
 
     async fn send_alert_teams(&self, alert: &Alert) -> Result<()> {
-        use crate::types::{TeamsSection, TeamsFact};
+        use crate::types::{TeamsFact, TeamsSection};
 
         let color = match alert.priority {
             crate::types::NotificationPriority::Critical => "FF0000",

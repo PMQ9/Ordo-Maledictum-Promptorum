@@ -79,12 +79,7 @@ async fn main() {
     check_intent(&comparator, &intent6, &config, 6).await;
 }
 
-fn create_intent(
-    action: &str,
-    topic: &str,
-    expertise: Vec<&str>,
-    budget: i64,
-) -> Intent {
+fn create_intent(action: &str, topic: &str, expertise: Vec<&str>, budget: i64) -> Intent {
     let mut constraints = HashMap::new();
     constraints.insert("max_budget".to_string(), json!(budget));
 

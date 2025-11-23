@@ -29,10 +29,7 @@ pub async fn query_ledger(
 
     let entries = if let Some(user_id) = &params.user_id {
         // Query by user ID
-        state
-            .ledger
-            .query_by_user(user_id, params.limit)
-            .await?
+        state.ledger.query_by_user(user_id, params.limit).await?
     } else if let Some(session_id) = &params.session_id {
         // Query by session ID
         state.ledger.query_by_session(session_id).await?

@@ -12,8 +12,12 @@ pub trait NotificationService: Send + Sync {
     async fn notify_approved(&self, request_id: &str, approver: &str) -> Result<()>;
 
     /// Send a notification that a request has been denied
-    async fn notify_denied(&self, request_id: &str, approver: &str, reason: Option<&str>)
-        -> Result<()>;
+    async fn notify_denied(
+        &self,
+        request_id: &str,
+        approver: &str,
+        reason: Option<&str>,
+    ) -> Result<()>;
 
     /// Send a notification that a request has expired
     async fn notify_expired(&self, request_id: &str) -> Result<()>;
@@ -163,7 +167,12 @@ impl NotificationService for MultiChannelNotifier {
         Ok(())
     }
 
-    async fn notify_denied(&self, request_id: &str, approver: &str, reason: Option<&str>) -> Result<()> {
+    async fn notify_denied(
+        &self,
+        request_id: &str,
+        approver: &str,
+        reason: Option<&str>,
+    ) -> Result<()> {
         let message = if let Some(reason) = reason {
             format!(
                 "❌ Approval Request {} has been DENIED by {}\nReason: {}",

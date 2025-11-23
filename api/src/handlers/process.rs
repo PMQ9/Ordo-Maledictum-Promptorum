@@ -5,9 +5,9 @@ use crate::state::{AppState, PendingApproval};
 use crate::types::*;
 use axum::{extract::State, Json};
 use intent_ledger::{
-    ComparatorDecision, ComparisonResult as LedgerComparisonResult, ElevationEvent,
-    ElevationStatus, LedgerEntry, ProcessingOutput, VotingResult as LedgerVotingResult,
-    AgreementLevel as LedgerAgreementLevel,
+    AgreementLevel as LedgerAgreementLevel, ComparatorDecision,
+    ComparisonResult as LedgerComparisonResult, ElevationEvent, ElevationStatus, LedgerEntry,
+    ProcessingOutput, VotingResult as LedgerVotingResult,
 };
 use intent_schema::Intent;
 use intent_voting::ParserResult;
@@ -211,7 +211,8 @@ pub async fn process_input(
             .iter()
             .map(|r| r.description.clone())
             .collect(),
-        requires_elevation: comparison_result.is_hard_mismatch() || voting_result.requires_human_review,
+        requires_elevation: comparison_result.is_hard_mismatch()
+            || voting_result.requires_human_review,
         explanation: comparison_result.message().to_string(),
     };
 

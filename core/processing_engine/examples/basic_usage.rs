@@ -33,7 +33,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Success: {}", result.success);
     println!("Function called: {}", result.metadata.function_called);
     println!("Duration: {}ms", result.metadata.duration_ms);
-    println!("Result data: {}\n", serde_json::to_string_pretty(&result.data)?);
+    println!(
+        "Result data: {}\n",
+        serde_json::to_string_pretty(&result.data)?
+    );
 
     // Example 2: Summarize Document
     println!("Example 2: Summarizing a document");
@@ -51,7 +54,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Success: {}", result.success);
     println!("Function called: {}", result.metadata.function_called);
     println!("Duration: {}ms", result.metadata.duration_ms);
-    println!("Result data: {}\n", serde_json::to_string_pretty(&result.data)?);
+    println!(
+        "Result data: {}\n",
+        serde_json::to_string_pretty(&result.data)?
+    );
 
     // Example 3: Draft Proposal
     println!("Example 3: Drafting a proposal");
@@ -76,7 +82,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if !result.metadata.warnings.is_empty() {
         println!("Warnings: {:?}", result.metadata.warnings);
     }
-    println!("Result data: {}\n", serde_json::to_string_pretty(&result.data)?);
+    println!(
+        "Result data: {}\n",
+        serde_json::to_string_pretty(&result.data)?
+    );
 
     // Example 4: Demonstrating Type Safety
     println!("Example 4: Type safety demonstration");

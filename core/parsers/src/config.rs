@@ -110,11 +110,10 @@ impl ParserConfig {
         let ollama_endpoint = std::env::var("OLLAMA_ENDPOINT")
             .unwrap_or_else(|_| "http://localhost:11434".to_string());
 
-        let ollama_model = std::env::var("OLLAMA_MODEL")
-            .unwrap_or_else(|_| "llama2".to_string());
+        let ollama_model = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "llama2".to_string());
 
-        let openai_model = std::env::var("OPENAI_MODEL")
-            .unwrap_or_else(|_| "gpt-4o-mini".to_string());
+        let openai_model =
+            std::env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-4o-mini".to_string());
 
         Ok(Self {
             enable_deterministic: true,

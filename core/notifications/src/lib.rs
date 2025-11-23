@@ -69,11 +69,11 @@ pub mod service;
 pub mod types;
 
 // Re-export main types for convenience
-pub use config::{NotificationConfig, EmailConfig, SlackConfig, TeamsConfig};
+pub use config::{EmailConfig, NotificationConfig, SlackConfig, TeamsConfig};
 pub use error::{NotificationError, Result};
 pub use service::NotificationService;
 pub use types::{
-    Alert, ApprovalRequest, EmailMessage, NotificationPriority, NotificationType,
-    SlackAttachment, SlackField, SlackMessage, TeamsAction, TeamsActionTarget, TeamsFact,
-    TeamsMessage, TeamsSection,
+    Alert, ApprovalRequest, EmailMessage, NotificationPriority, NotificationType, SlackAttachment,
+    SlackField, SlackMessage, TeamsAction, TeamsActionTarget, TeamsFact, TeamsMessage,
+    TeamsSection,
 };

@@ -1,13 +1,13 @@
-pub mod types;
 pub mod config;
 pub mod deterministic;
+pub mod ensemble;
 pub mod ollama;
 pub mod openai;
-pub mod ensemble;
+pub mod types;
 
-pub use types::{IntentParser, ParserError, ParserResult};
-pub use config::{ParserConfig, OllamaConfig, OpenAIConfig};
+pub use config::{OllamaConfig, OpenAIConfig, ParserConfig};
 pub use deterministic::DeterministicParser;
+pub use ensemble::{EnsembleResult, ParserEnsemble};
 pub use ollama::OllamaParser;
 pub use openai::OpenAIParser;
-pub use ensemble::{ParserEnsemble, EnsembleResult};
+pub use types::{IntentParser, ParserError, ParserResult};

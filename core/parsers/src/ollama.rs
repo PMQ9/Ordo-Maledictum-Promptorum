@@ -1,10 +1,10 @@
 use crate::config::OllamaConfig;
 use crate::types::{IntentParser, ParserError, ParserResult};
+use chrono::Utc;
 use intent_schema::{Intent, IntentMetadata, ParsedIntent};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use chrono::Utc;
 use uuid::Uuid;
 
 /// Ollama API request format
@@ -119,7 +119,12 @@ JSON output:"#,
 
 #[async_trait::async_trait]
 impl IntentParser for OllamaParser {
-    async fn parse(&self, user_input: &str, user_id: &str, session_id: &str) -> ParserResult<ParsedIntent> {
+    async fn parse(
+        &self,
+        user_input: &str,
+        user_id: &str,
+        session_id: &str,
+    ) -> ParserResult<ParsedIntent> {
         let start = Instant::now();
 
         if user_input.trim().is_empty() {
@@ -176,7 +181,9 @@ impl IntentParser for OllamaParser {
         // Convert to Intent
         let intent = Intent {
             action: ollama_intent.action,
-            topic_id: ollama_intent.topic_id.unwrap_or_else(|| format!("topic_{}", Uuid::new_v4())),
+            topic_id: ollama_intent
+                .topic_id
+                .unwrap_or_else(|| format!("topic_{}", Uuid::new_v4())),
             expertise: ollama_intent.expertise.unwrap_or_default(),
             constraints: ollama_intent.constraints,
             content_refs: Vec::new(),

@@ -1,8 +1,8 @@
-use intent_schema::{
-    Action, DocumentSummary, Expert, Intent, Proposal, ProposalSection, ProcessingMetadata,
-    ProcessingResult, Expertise,
-};
 use chrono::Utc;
+use intent_schema::{
+    Action, DocumentSummary, Expert, Intent, ProcessingMetadata, ProcessingResult, Proposal,
+    ProposalSection,
+};
 use serde_json::json;
 use std::time::Instant;
 use thiserror::Error;
@@ -11,8 +11,8 @@ use tracing::{info, warn};
 /// Errors that can occur during processing
 #[derive(Error, Debug)]
 pub enum ProcessingError {
-    #[error("Unsupported action: {0:?}")]
-    UnsupportedAction(Action),
+    #[error("Unsupported action: {0}")]
+    UnsupportedAction(String),
 
     #[error("Invalid intent: {0}")]
     InvalidIntent(String),
@@ -33,6 +33,7 @@ pub enum ProcessingError {
 /// - Results are structured and auditable
 pub struct ProcessingEngine {
     /// Configuration for the engine
+    #[allow(dead_code)]
     config: EngineConfig,
 }
 
@@ -67,6 +68,19 @@ impl ProcessingEngine {
         Self { config }
     }
 
+    /// Convert string action to Action enum
+    fn parse_action(action: &str) -> Result<Action, ProcessingError> {
+        match action {
+            "find_experts" => Ok(Action::FindExperts),
+            "summarize" => Ok(Action::Summarize),
+            "draft_proposal" => Ok(Action::DraftProposal),
+            "analyze_document" => Ok(Action::AnalyzeDocument),
+            "generate_report" => Ok(Action::GenerateReport),
+            "search_knowledge" => Ok(Action::SearchKnowledge),
+            _ => Err(ProcessingError::UnsupportedAction(action.to_string())),
+        }
+    }
+
     /// Execute a trusted intent and return a structured result
     ///
     /// This is the main entry point for processing. It dispatches to
@@ -82,29 +96,32 @@ impl ProcessingEngine {
         let started_at = Utc::now();
 
         info!(
-            "Executing intent: action={:?}, topic={:?}",
-            intent.action, intent.topic
+            "Executing intent: action={:?}, topic_id={:?}",
+            intent.action, intent.topic_id
         );
 
         // Dispatch to the appropriate typed function based on the action
-        let result = match &intent.action {
-            Action::FindExperts => self.execute_find_experts(intent).await,
-            Action::Summarize => self.execute_summarize(intent).await,
-            Action::DraftProposal => self.execute_draft_proposal(intent).await,
-            Action::AnalyzeDocument => self.execute_analyze_document(intent).await,
-            Action::GenerateReport => self.execute_generate_report(intent).await,
-            Action::SearchKnowledge => self.execute_search_knowledge(intent).await,
+        let result = match intent.action.as_str() {
+            "find_experts" => self.execute_find_experts(intent).await,
+            "summarize" => self.execute_summarize(intent).await,
+            "draft_proposal" => self.execute_draft_proposal(intent).await,
+            "analyze_document" => self.execute_analyze_document(intent).await,
+            "generate_report" => self.execute_generate_report(intent).await,
+            "search_knowledge" => self.execute_search_knowledge(intent).await,
+            _ => return Err(ProcessingError::UnsupportedAction(intent.action.clone())),
         };
 
         let duration_ms = start_time.elapsed().as_millis() as u64;
         let completed_at = Utc::now();
+
+        let action_enum = Self::parse_action(&intent.action)?;
 
         match result {
             Ok((function_name, data, warnings)) => {
                 info!("Intent executed successfully in {}ms", duration_ms);
 
                 Ok(ProcessingResult::success(
-                    intent.action.clone(),
+                    action_enum,
                     data,
                     ProcessingMetadata {
                         started_at,
@@ -119,7 +136,7 @@ impl ProcessingEngine {
                 warn!("Intent execution failed: {}", e);
 
                 Ok(ProcessingResult::failure(
-                    intent.action.clone(),
+                    action_enum,
                     e.to_string(),
                     ProcessingMetadata {
                         started_at,
@@ -140,11 +157,23 @@ impl ProcessingEngine {
         &self,
         intent: &Intent,
     ) -> Result<(String, serde_json::Value, Vec<String>), ProcessingError> {
+        // Extract constraints from HashMap
+        let max_results = intent
+            .constraints
+            .get("max_results")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(10) as usize;
+
+        let max_budget = intent
+            .constraints
+            .get("max_budget")
+            .and_then(|v| v.as_i64());
+
         let experts = find_experts(
-            intent.topic.clone(),
+            Some(intent.topic_id.clone()),
             intent.expertise.clone(),
-            intent.constraints.max_results.unwrap_or(10),
-            intent.constraints.max_budget,
+            max_results,
+            max_budget,
         );
 
         let data = json!({ "experts": experts, "count": experts.len() });
@@ -157,18 +186,13 @@ impl ProcessingEngine {
         &self,
         intent: &Intent,
     ) -> Result<(String, serde_json::Value, Vec<String>), ProcessingError> {
-        let document_refs = intent
-            .content_refs
-            .as_ref()
-            .ok_or_else(|| ProcessingError::InvalidIntent("No content refs provided".to_string()))?;
-
-        if document_refs.is_empty() {
+        if intent.content_refs.is_empty() {
             return Err(ProcessingError::InvalidIntent(
                 "No documents to summarize".to_string(),
             ));
         }
 
-        let summary = summarize_document(&document_refs[0], intent.topic.clone());
+        let summary = summarize_document(&intent.content_refs[0], Some(intent.topic_id.clone()));
 
         let data = json!({ "summary": summary });
 
@@ -180,10 +204,15 @@ impl ProcessingEngine {
         &self,
         intent: &Intent,
     ) -> Result<(String, serde_json::Value, Vec<String>), ProcessingError> {
+        let max_budget = intent
+            .constraints
+            .get("max_budget")
+            .and_then(|v| v.as_i64());
+
         let proposal = draft_proposal(
-            intent.topic.clone(),
+            Some(intent.topic_id.clone()),
             intent.expertise.clone(),
-            intent.constraints.max_budget,
+            max_budget,
         );
 
         let data = json!({ "proposal": proposal });
@@ -203,7 +232,7 @@ impl ProcessingEngine {
     ) -> Result<(String, serde_json::Value, Vec<String>), ProcessingError> {
         let analysis = json!({
             "status": "analyzed",
-            "topic": intent.topic,
+            "topic_id": intent.topic_id,
             "complexity": "medium",
             "key_findings": ["Finding 1", "Finding 2", "Finding 3"]
         });
@@ -217,7 +246,7 @@ impl ProcessingEngine {
         intent: &Intent,
     ) -> Result<(String, serde_json::Value, Vec<String>), ProcessingError> {
         let report = json!({
-            "title": format!("Report: {}", intent.topic.as_deref().unwrap_or("Untitled")),
+            "title": format!("Report: {}", intent.topic_id),
             "sections": [
                 {"heading": "Executive Summary", "content": "..."},
                 {"heading": "Detailed Analysis", "content": "..."},
@@ -235,7 +264,7 @@ impl ProcessingEngine {
         intent: &Intent,
     ) -> Result<(String, serde_json::Value, Vec<String>), ProcessingError> {
         let results = json!({
-            "query": intent.topic,
+            "query": intent.topic_id,
             "results": [
                 {"id": "doc1", "title": "Sample Document 1", "relevance": 0.95},
                 {"id": "doc2", "title": "Sample Document 2", "relevance": 0.87},
@@ -271,10 +300,10 @@ impl Default for ProcessingEngine {
 ///
 /// In production, this would query a database or API
 fn find_experts(
-    topic: Option<String>,
-    expertise: Vec<Expertise>,
-    max_results: u32,
-    max_budget: Option<u64>,
+    _topic: Option<String>,
+    _expertise: Vec<String>,
+    max_results: usize,
+    max_budget: Option<i64>,
 ) -> Vec<Expert> {
     let mut experts = vec![
         Expert {
@@ -311,11 +340,11 @@ fn find_experts(
 
     // Filter by budget if specified
     if let Some(budget) = max_budget {
-        experts.retain(|e| e.hourly_rate <= budget);
+        experts.retain(|e| e.hourly_rate as i64 <= budget);
     }
 
     // Limit results
-    experts.truncate(max_results as usize);
+    experts.truncate(max_results);
 
     experts
 }
@@ -348,8 +377,8 @@ fn summarize_document(document_id: &str, topic: Option<String>) -> DocumentSumma
 /// In production, this would use a structured generation pipeline
 fn draft_proposal(
     topic: Option<String>,
-    expertise: Vec<Expertise>,
-    budget: Option<u64>,
+    _expertise: Vec<String>,
+    budget: Option<i64>,
 ) -> Proposal {
     let topic_str = topic.unwrap_or_else(|| "Project Proposal".to_string());
 
@@ -361,14 +390,15 @@ fn draft_proposal(
                 heading: "Executive Summary".to_string(),
                 content: format!(
                     "This proposal outlines a comprehensive approach to {}. \
-                     We bring together experts in {:?} to deliver exceptional results.",
-                    topic_str, expertise
+                     We bring together experts to deliver exceptional results.",
+                    topic_str
                 ),
                 order: 1,
             },
             ProposalSection {
                 heading: "Scope of Work".to_string(),
-                content: "Detailed breakdown of deliverables, milestones, and timeline.".to_string(),
+                content: "Detailed breakdown of deliverables, milestones, and timeline."
+                    .to_string(),
                 order: 2,
             },
             ProposalSection {
@@ -389,7 +419,7 @@ fn draft_proposal(
             },
         ],
         created_at: Utc::now(),
-        estimated_budget: budget,
+        estimated_budget: budget.map(|b| b as u64),
         timeline_weeks: Some(14),
     }
 }
@@ -397,32 +427,42 @@ fn draft_proposal(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use intent_schema::{Action, Constraints, Expertise, Intent};
+    use intent_schema::IntentMetadata;
+    use std::collections::HashMap;
+    use uuid::Uuid;
+
+    fn create_test_intent(action: &str, topic_id: &str) -> Intent {
+        Intent {
+            action: action.to_string(),
+            topic_id: topic_id.to_string(),
+            expertise: vec!["security".to_string()],
+            constraints: HashMap::new(),
+            content_refs: vec![],
+            metadata: IntentMetadata {
+                id: Uuid::new_v4(),
+                timestamp: Utc::now(),
+                user_id: "test_user".to_string(),
+                session_id: "test_session".to_string(),
+            },
+        }
+    }
 
     #[tokio::test]
     async fn test_execute_find_experts() {
         let engine = ProcessingEngine::new();
 
-        let intent = Intent {
-            action: Action::FindExperts,
-            topic: Some("supply_chain_risk".to_string()),
-            expertise: vec![Expertise::Security],
-            constraints: intent_schema::Constraints {
-                max_budget: Some(300),
-                max_results: Some(5),
-                ..Default::default()
-            },
-            content_refs: Some(vec![]),
-            metadata: Some(intent_schema::IntentMetadata {
-                user_id: "test_user".to_string(),
-                session_id: "test_session".to_string(),
-            }),
-        };
+        let mut intent = create_test_intent("find_experts", "supply_chain_risk");
+        intent
+            .constraints
+            .insert("max_budget".to_string(), json!(300));
+        intent
+            .constraints
+            .insert("max_results".to_string(), json!(5));
 
         let result = engine.execute(&intent).await.unwrap();
 
         assert!(result.success);
-        assert_eq!(result.action, Action::FindExperts);
+        assert_eq!(result.action, "find_experts");
         assert!(result.data.get("experts").is_some());
         assert!(result.metadata.duration_ms < 1000);
     }
@@ -431,22 +471,13 @@ mod tests {
     async fn test_execute_summarize() {
         let engine = ProcessingEngine::new();
 
-        let intent = Intent {
-            action: Action::Summarize,
-            topic: Some("cybersecurity trends".to_string()),
-            expertise: vec![],
-            constraints: Default::default(),
-            content_refs: Some(vec!["doc_123".to_string()]),
-            metadata: Some(intent_schema::IntentMetadata {
-                user_id: "test_user".to_string(),
-                session_id: "test_session".to_string(),
-            }),
-        };
+        let mut intent = create_test_intent("summarize", "cybersecurity_trends");
+        intent.content_refs = vec!["doc_123".to_string()];
 
         let result = engine.execute(&intent).await.unwrap();
 
         assert!(result.success);
-        assert_eq!(result.action, Action::Summarize);
+        assert_eq!(result.action, "summarize");
         assert!(result.data.get("summary").is_some());
     }
 
@@ -454,64 +485,31 @@ mod tests {
     async fn test_execute_draft_proposal() {
         let engine = ProcessingEngine::new();
 
-        let intent = Intent {
-            action: Action::DraftProposal,
-            topic: Some("AI integration project".to_string()),
-            expertise: vec![Expertise::MachineLearning, Expertise::Security],
-            constraints: intent_schema::Constraints {
-                max_budget: Some(50000),
-                ..Default::default()
-            },
-            content_refs: Some(vec![]),
-            metadata: Some(intent_schema::IntentMetadata {
-                user_id: "test_user".to_string(),
-                session_id: "test_session".to_string(),
-            }),
-        };
+        let mut intent = create_test_intent("draft_proposal", "ai_integration_project");
+        intent.expertise = vec!["machine_learning".to_string(), "security".to_string()];
+        intent
+            .constraints
+            .insert("max_budget".to_string(), json!(50000));
 
         let result = engine.execute(&intent).await.unwrap();
 
         assert!(result.success);
-        assert_eq!(result.action, Action::DraftProposal);
+        assert_eq!(result.action, "draft_proposal");
         assert!(result.data.get("proposal").is_some());
     }
 
     #[tokio::test]
-    async fn test_no_raw_prompts() {
-        // This test demonstrates that the engine CANNOT accept raw prompts
-        // All inputs must be structured Intents
-
+    async fn test_unsupported_action() {
         let engine = ProcessingEngine::new();
+        let intent = create_test_intent("invalid_action", "test");
 
-        // We can only pass typed Intent structures
-        let valid_intent = Intent {
-            action: Action::FindExperts,
-            topic: Some("blockchain security".to_string()),
-            expertise: vec![Expertise::Security],
-            constraints: Default::default(),
-            content_refs: Some(vec![]),
-            metadata: Some(intent_schema::IntentMetadata {
-                user_id: "test_user".to_string(),
-                session_id: "test_session".to_string(),
-            }),
-        };
-
-        let result = engine.execute(&valid_intent).await.unwrap();
-        assert!(result.success);
-
-        // The following would NOT compile (uncomment to verify):
-        // let raw_prompt = "Find me some experts";
-        // engine.execute(raw_prompt).await; // ❌ Type error!
+        let result = engine.execute(&intent).await;
+        assert!(result.is_err());
     }
 
     #[test]
     fn test_find_experts_filters_by_budget() {
-        let experts = find_experts(
-            Some("security".to_string()),
-            vec![Expertise::Security],
-            10,
-            Some(250), // Only experts charging ≤ $250/hr
-        );
+        let experts = find_experts(Some("security".to_string()), vec![], 10, Some(250));
 
         assert!(experts.len() <= 2);
         assert!(experts.iter().all(|e| e.hourly_rate <= 250));
@@ -531,7 +529,7 @@ mod tests {
     fn test_draft_proposal_structure() {
         let proposal = draft_proposal(
             Some("Cloud migration".to_string()),
-            vec![Expertise::Cloud, Expertise::DevOps],
+            vec!["cloud".to_string(), "devops".to_string()],
             Some(100000),
         );
 

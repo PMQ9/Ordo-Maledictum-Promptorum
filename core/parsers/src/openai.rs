@@ -1,10 +1,10 @@
 use crate::config::OpenAIConfig;
 use crate::types::{IntentParser, ParserError, ParserResult};
+use chrono::Utc;
 use intent_schema::{Intent, IntentMetadata, ParsedIntent};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
-use chrono::Utc;
 use uuid::Uuid;
 
 /// OpenAI API request format
@@ -109,15 +109,19 @@ Rules:
 
     /// Parse the OpenAI response into an Intent
     fn parse_openai_response(&self, content: &str) -> Result<OpenAIIntent, ParserError> {
-        serde_json::from_str::<OpenAIIntent>(content).map_err(|e| {
-            ParserError::ParseError(format!("Failed to parse OpenAI JSON: {}", e))
-        })
+        serde_json::from_str::<OpenAIIntent>(content)
+            .map_err(|e| ParserError::ParseError(format!("Failed to parse OpenAI JSON: {}", e)))
     }
 }
 
 #[async_trait::async_trait]
 impl IntentParser for OpenAIParser {
-    async fn parse(&self, user_input: &str, user_id: &str, session_id: &str) -> ParserResult<ParsedIntent> {
+    async fn parse(
+        &self,
+        user_input: &str,
+        user_id: &str,
+        session_id: &str,
+    ) -> ParserResult<ParsedIntent> {
         let start = Instant::now();
 
         if user_input.trim().is_empty() {
@@ -199,7 +203,9 @@ impl IntentParser for OpenAIParser {
         // Convert to Intent
         let intent = Intent {
             action: openai_intent.action,
-            topic_id: openai_intent.topic_id.unwrap_or_else(|| format!("topic_{}", Uuid::new_v4())),
+            topic_id: openai_intent
+                .topic_id
+                .unwrap_or_else(|| format!("topic_{}", Uuid::new_v4())),
             expertise: openai_intent.expertise.unwrap_or_default(),
             constraints: openai_intent.constraints,
             content_refs: Vec::new(),

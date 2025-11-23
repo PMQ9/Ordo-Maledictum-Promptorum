@@ -101,7 +101,8 @@ impl DetectionPatterns {
             ],
             cloud_api: vec![
                 // AWS CLI/API commands
-                Regex::new(r"(?i)aws\s+(ec2|s3|iam|lambda|rds)\s+(delete|terminate|destroy)").unwrap(),
+                Regex::new(r"(?i)aws\s+(ec2|s3|iam|lambda|rds)\s+(delete|terminate|destroy)")
+                    .unwrap(),
                 Regex::new(r"(?i)aws\s+s3\s+rm\s+--recursive").unwrap(),
                 Regex::new(r"(?i)aws\s+ec2\s+(run-instances|terminate-instances)").unwrap(),
                 Regex::new(r"(?i)aws\s+iam\s+(create|delete|attach|detach)").unwrap(),
@@ -139,6 +140,7 @@ fn get_patterns() -> &'static DetectionPatterns {
 #[derive(Debug, Clone)]
 pub struct MaliciousDetector {
     /// Enable strict mode (more aggressive detection)
+    #[allow(dead_code)]
     strict_mode: bool,
 }
 
@@ -151,9 +153,7 @@ impl Default for MaliciousDetector {
 impl MaliciousDetector {
     /// Create a new detector with default settings
     pub fn new() -> Self {
-        Self {
-            strict_mode: false,
-        }
+        Self { strict_mode: false }
     }
 
     /// Create a detector with strict mode enabled
@@ -169,7 +169,9 @@ impl MaliciousDetector {
         let patterns = get_patterns();
 
         // Check command injection
-        if let Some(reason) = self.check_patterns(&patterns.command_injection, input, "Command injection") {
+        if let Some(reason) =
+            self.check_patterns(&patterns.command_injection, input, "Command injection")
+        {
             tracing::warn!("Blocked command injection attempt: {}", input);
             return DetectionResult::Blocked(reason);
         }
@@ -187,13 +189,16 @@ impl MaliciousDetector {
         }
 
         // Check path traversal
-        if let Some(reason) = self.check_patterns(&patterns.path_traversal, input, "Path traversal") {
+        if let Some(reason) = self.check_patterns(&patterns.path_traversal, input, "Path traversal")
+        {
             tracing::warn!("Blocked path traversal attempt: {}", input);
             return DetectionResult::Blocked(reason);
         }
 
         // Check cloud API manipulation
-        if let Some(reason) = self.check_patterns(&patterns.cloud_api, input, "Cloud resource manipulation") {
+        if let Some(reason) =
+            self.check_patterns(&patterns.cloud_api, input, "Cloud resource manipulation")
+        {
             tracing::warn!("Blocked cloud API manipulation: {}", input);
             return DetectionResult::Blocked(reason);
         }
@@ -217,11 +222,17 @@ impl MaliciousDetector {
 
         // Check all pattern categories and provide specific feedback
         if let Some(matched) = self.find_match(&patterns.command_injection, input) {
-            return DetectionResult::Blocked(format!("Command injection: matched pattern '{}'", matched));
+            return DetectionResult::Blocked(format!(
+                "Command injection: matched pattern '{}'",
+                matched
+            ));
         }
 
         if let Some(matched) = self.find_match(&patterns.sql_injection, input) {
-            return DetectionResult::Blocked(format!("SQL injection: matched pattern '{}'", matched));
+            return DetectionResult::Blocked(format!(
+                "SQL injection: matched pattern '{}'",
+                matched
+            ));
         }
 
         if let Some(matched) = self.find_match(&patterns.xss, input) {
@@ -229,11 +240,17 @@ impl MaliciousDetector {
         }
 
         if let Some(matched) = self.find_match(&patterns.path_traversal, input) {
-            return DetectionResult::Blocked(format!("Path traversal: matched pattern '{}'", matched));
+            return DetectionResult::Blocked(format!(
+                "Path traversal: matched pattern '{}'",
+                matched
+            ));
         }
 
         if let Some(matched) = self.find_match(&patterns.cloud_api, input) {
-            return DetectionResult::Blocked(format!("Cloud resource manipulation: matched pattern '{}'", matched));
+            return DetectionResult::Blocked(format!(
+                "Cloud resource manipulation: matched pattern '{}'",
+                matched
+            ));
         }
 
         DetectionResult::Clean
@@ -477,7 +494,10 @@ mod tests {
             let result = detector.detect(input);
             // Some of these might trigger in strict mode, but should be clean in normal mode
             if let DetectionResult::Blocked(reason) = result {
-                println!("Warning: Potential false positive for '{}': {}", input, reason);
+                println!(
+                    "Warning: Potential false positive for '{}': {}",
+                    input, reason
+                );
             }
         }
     }

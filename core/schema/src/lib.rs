@@ -153,8 +153,16 @@ impl Intent {
             0.95
         } else {
             // Simple word overlap similarity
-            let a_words: Vec<&str> = self.topic_id.split(&['_', '-', ' '][..]).filter(|s| !s.is_empty()).collect();
-            let b_words: Vec<&str> = other.topic_id.split(&['_', '-', ' '][..]).filter(|s| !s.is_empty()).collect();
+            let a_words: Vec<&str> = self
+                .topic_id
+                .split(&['_', '-', ' '][..])
+                .filter(|s| !s.is_empty())
+                .collect();
+            let b_words: Vec<&str> = other
+                .topic_id
+                .split(&['_', '-', ' '][..])
+                .filter(|s| !s.is_empty())
+                .collect();
             let common = a_words.iter().filter(|w| b_words.contains(w)).count();
             if a_words.len() + b_words.len() > 0 {
                 (2.0 * common as f64) / (a_words.len() + b_words.len()) as f64
@@ -173,7 +181,8 @@ impl Intent {
 
         // Constraints comparison (weight: 1.5)
         let constraints_weight = 1.5;
-        let constraints_sim = calculate_constraint_similarity(&self.constraints, &other.constraints);
+        let constraints_sim =
+            calculate_constraint_similarity(&self.constraints, &other.constraints);
         score += constraints_sim * constraints_weight;
         weight_sum += constraints_weight;
 
@@ -224,10 +233,8 @@ fn calculate_constraint_similarity(
         return 0.3;
     }
 
-    let all_keys: std::collections::HashSet<_> = constraints_a
-        .keys()
-        .chain(constraints_b.keys())
-        .collect();
+    let all_keys: std::collections::HashSet<_> =
+        constraints_a.keys().chain(constraints_b.keys()).collect();
 
     let mut total_similarity = 0.0;
     for key in &all_keys {
@@ -614,8 +621,7 @@ impl Intent {
 
     /// Gets the budget constraint if present.
     pub fn get_budget(&self) -> Option<i64> {
-        self.get_constraint("max_budget")
-            .and_then(|v| v.as_i64())
+        self.get_constraint("max_budget").and_then(|v| v.as_i64())
     }
 }
 
@@ -674,8 +680,7 @@ impl ProviderConfig {
 
     /// Checks if an expertise area is allowed by this configuration.
     pub fn is_expertise_allowed(&self, expertise: &str) -> bool {
-        self.allowed_expertise.is_empty() ||
-        self.allowed_expertise.iter().any(|e| e == expertise)
+        self.allowed_expertise.is_empty() || self.allowed_expertise.iter().any(|e| e == expertise)
     }
 
     /// Checks if all expertise areas in the list are allowed.
@@ -690,8 +695,7 @@ impl ProviderConfig {
 
     /// Checks if a domain is allowed by this configuration.
     pub fn is_domain_allowed(&self, domain: &str) -> bool {
-        self.allowed_domains.is_empty() ||
-        self.allowed_domains.iter().any(|d| d == domain)
+        self.allowed_domains.is_empty() || self.allowed_domains.iter().any(|d| d == domain)
     }
 }
 
@@ -915,7 +919,10 @@ mod tests {
         let intent2 = intent1.clone();
 
         let similarity = intent1.similarity(&intent2);
-        assert_eq!(similarity, 1.0, "Identical intents should have similarity 1.0");
+        assert_eq!(
+            similarity, 1.0,
+            "Identical intents should have similarity 1.0"
+        );
     }
 
     #[test]
@@ -940,7 +947,10 @@ mod tests {
         );
 
         let similarity = intent1.similarity(&intent2);
-        assert!(similarity < 0.75, "Different actions should have low similarity");
+        assert!(
+            similarity < 0.75,
+            "Different actions should have low similarity"
+        );
     }
 
     #[test]
@@ -965,7 +975,10 @@ mod tests {
         );
 
         let similarity = intent1.similarity(&intent2);
-        assert!(similarity >= 0.95, "Case-insensitive actions should have high similarity");
+        assert!(
+            similarity >= 0.95,
+            "Case-insensitive actions should have high similarity"
+        );
     }
 
     #[test]
@@ -1035,7 +1048,10 @@ mod tests {
         let set_a: Vec<String> = vec![];
         let set_b: Vec<String> = vec![];
         let similarity = calculate_set_similarity(&set_a, &set_b);
-        assert_eq!(similarity, 1.0, "Empty sets should be considered fully similar");
+        assert_eq!(
+            similarity, 1.0,
+            "Empty sets should be considered fully similar"
+        );
     }
 
     #[test]
@@ -1043,7 +1059,10 @@ mod tests {
         let set_a = vec!["security".to_string()];
         let set_b: Vec<String> = vec![];
         let similarity = calculate_set_similarity(&set_a, &set_b);
-        assert_eq!(similarity, 0.0, "One empty set should result in zero similarity");
+        assert_eq!(
+            similarity, 0.0,
+            "One empty set should result in zero similarity"
+        );
     }
 
     #[test]
@@ -1051,7 +1070,10 @@ mod tests {
         let set_a = vec!["security".to_string(), "ml".to_string()];
         let set_b = vec!["security".to_string(), "ml".to_string()];
         let similarity = calculate_set_similarity(&set_a, &set_b);
-        assert_eq!(similarity, 1.0, "Identical sets should have full similarity");
+        assert_eq!(
+            similarity, 1.0,
+            "Identical sets should have full similarity"
+        );
     }
 
     #[test]
@@ -1085,7 +1107,10 @@ mod tests {
         constraints_a.insert("max_budget".to_string(), serde_json::json!(50000));
         let constraints_b = HashMap::new();
         let similarity = calculate_constraint_similarity(&constraints_a, &constraints_b);
-        assert_eq!(similarity, 0.3, "One empty constraint should give partial similarity");
+        assert_eq!(
+            similarity, 0.3,
+            "One empty constraint should give partial similarity"
+        );
     }
 
     #[test]

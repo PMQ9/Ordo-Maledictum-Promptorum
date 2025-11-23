@@ -33,7 +33,12 @@ pub enum ParserError {
 #[async_trait::async_trait]
 pub trait IntentParser: Send + Sync {
     /// Parse user input into a structured intent
-    async fn parse(&self, user_input: &str, user_id: &str, session_id: &str) -> ParserResult<ParsedIntent>;
+    async fn parse(
+        &self,
+        user_input: &str,
+        user_id: &str,
+        session_id: &str,
+    ) -> ParserResult<ParsedIntent>;
 
     /// Get the parser name/ID
     fn parser_id(&self) -> String;

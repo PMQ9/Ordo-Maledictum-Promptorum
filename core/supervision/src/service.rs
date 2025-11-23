@@ -34,10 +34,7 @@ impl SupervisionService<InMemoryStorage> {
 
 impl<S: ApprovalStorage + 'static> SupervisionService<S> {
     /// Create a new supervision service with custom storage
-    pub fn with_storage(
-        storage: S,
-        config: SupervisionConfig,
-    ) -> Self {
+    pub fn with_storage(storage: S, config: SupervisionConfig) -> Self {
         let storage = Arc::new(storage);
         let notifier = Arc::new(MultiChannelNotifier::new(config.clone()));
 
@@ -69,9 +66,9 @@ impl<S: ApprovalStorage + 'static> SupervisionService<S> {
         let interval_hours = self.config.default_expiration_hours.min(6); // Check at least every 6 hours
 
         let handle = tokio::spawn(async move {
-            let mut interval = tokio::time::interval(
-                tokio::time::Duration::from_secs((interval_hours * 3600) as u64)
-            );
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(
+                (interval_hours * 3600) as u64,
+            ));
 
             loop {
                 interval.tick().await;
@@ -121,18 +118,13 @@ impl<S: ApprovalStorage + 'static> SupervisionService<S> {
         parsed_intents: Vec<serde_json::Value>,
     ) -> Result<ApprovalRequest> {
         // Create the approval request
-        let mut request = ApprovalRequest::new(
-            intent,
-            reasons,
-            risk_level,
-            raw_input,
-            parsed_intents,
-        );
+        let mut request =
+            ApprovalRequest::new(intent, reasons, risk_level, raw_input, parsed_intents);
 
         // Set expiration based on config
         if let Some(expires_at) = request.expires_at.as_mut() {
-            *expires_at = chrono::Utc::now()
-                + chrono::Duration::hours(self.config.default_expiration_hours);
+            *expires_at =
+                chrono::Utc::now() + chrono::Duration::hours(self.config.default_expiration_hours);
         }
 
         info!(
@@ -260,7 +252,10 @@ impl<S: ApprovalStorage + 'static> SupervisionService<S> {
 
         // Send notifications
         if approved {
-            let _ = self.notifier.notify_approved(request_id, &approver_id).await;
+            let _ = self
+                .notifier
+                .notify_approved(request_id, &approver_id)
+                .await;
         } else {
             let _ = self
                 .notifier
@@ -373,10 +368,7 @@ mod tests {
             .await
             .unwrap();
 
-        let status = service
-            .check_approval_status(&request.id)
-            .await
-            .unwrap();
+        let status = service.check_approval_status(&request.id).await.unwrap();
 
         assert!(status.is_none()); // No decision made yet
     }
@@ -501,23 +493,13 @@ mod tests {
 
         // First approval should succeed
         service
-            .submit_approval(
-                &request.id,
-                true,
-                "approver1".to_string(),
-                None,
-            )
+            .submit_approval(&request.id, true, "approver1".to_string(), None)
             .await
             .unwrap();
 
         // Second approval should fail
         let result = service
-            .submit_approval(
-                &request.id,
-                false,
-                "approver2".to_string(),
-                None,
-            )
+            .submit_approval(&request.id, false, "approver2".to_string(), None)
             .await;
 
         assert!(result.is_err());

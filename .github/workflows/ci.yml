@@ -9,6 +9,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+  SQLX_OFFLINE: true  # Use offline mode for sqlx (no database required)
 
 jobs:
   lint:

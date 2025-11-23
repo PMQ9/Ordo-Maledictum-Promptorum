@@ -104,10 +104,8 @@ impl AppState {
         // Add OpenAI parser if enabled
         if config.parsers.enable_openai {
             if let Some(api_key) = &config.parsers.openai_api_key {
-                let openai = OpenAIParser::new(
-                    api_key.clone(),
-                    config.parsers.openai_model.clone(),
-                );
+                let openai =
+                    OpenAIParser::new(api_key.clone(), config.parsers.openai_model.clone());
                 ensemble.add_parser(Box::new(openai));
                 tracing::info!("Added OpenAI parser to ensemble");
             } else {

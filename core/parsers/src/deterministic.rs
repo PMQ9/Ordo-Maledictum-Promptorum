@@ -1,9 +1,9 @@
 use crate::types::{IntentParser, ParserError, ParserResult};
+use chrono::Utc;
 use intent_schema::{Intent, IntentMetadata, ParsedIntent};
 use regex::Regex;
 use std::collections::HashMap;
 use std::time::Instant;
-use chrono::Utc;
 use uuid::Uuid;
 
 /// Deterministic rule-based parser
@@ -27,9 +27,28 @@ impl DeterministicParser {
 
         // Define keyword patterns for each action
         let patterns = vec![
-            ("find_experts", vec!["find expert", "search expert", "locate expert", "get expert"]),
-            ("summarize", vec!["summarize", "summary of", "give me a summary"]),
-            ("draft_proposal", vec!["draft proposal", "create proposal", "write proposal", "proposal for"]),
+            (
+                "find_experts",
+                vec![
+                    "find expert",
+                    "search expert",
+                    "locate expert",
+                    "get expert",
+                ],
+            ),
+            (
+                "summarize",
+                vec!["summarize", "summary of", "give me a summary"],
+            ),
+            (
+                "draft_proposal",
+                vec![
+                    "draft proposal",
+                    "create proposal",
+                    "write proposal",
+                    "proposal for",
+                ],
+            ),
             ("research", vec!["research", "investigate", "study"]),
             ("query", vec!["query", "question", "ask about", "what is"]),
         ];
@@ -52,11 +71,28 @@ impl DeterministicParser {
         let mut expertise = Vec::new();
 
         let expertise_keywords = vec![
-            ("ml", vec!["ml", "machine learning", "ai", "artificial intelligence"]),
-            ("embedded", vec!["embedded", "iot", "firmware", "microcontroller"]),
-            ("security", vec!["security", "cybersecurity", "infosec", "penetration testing"]),
+            (
+                "ml",
+                vec!["ml", "machine learning", "ai", "artificial intelligence"],
+            ),
+            (
+                "embedded",
+                vec!["embedded", "iot", "firmware", "microcontroller"],
+            ),
+            (
+                "security",
+                vec![
+                    "security",
+                    "cybersecurity",
+                    "infosec",
+                    "penetration testing",
+                ],
+            ),
             ("cloud", vec!["cloud", "aws", "azure", "gcp", "kubernetes"]),
-            ("blockchain", vec!["blockchain", "crypto", "web3", "ethereum"]),
+            (
+                "blockchain",
+                vec!["blockchain", "crypto", "web3", "ethereum"],
+            ),
         ];
 
         for (key, keywords) in expertise_keywords {
@@ -74,8 +110,7 @@ impl DeterministicParser {
     /// Extract topic ID from user input
     fn extract_topic_id(&self, input: &str) -> String {
         // Simple heuristic: extract text after common prepositions
-        let re = Regex::new(r"(?:about|on|regarding|for|in)\s+([^.?!,]+)")
-            .unwrap();
+        let re = Regex::new(r"(?:about|on|regarding|for|in)\s+([^.?!,]+)").unwrap();
 
         if let Some(captures) = re.captures(input) {
             if let Some(topic) = captures.get(1) {
@@ -97,16 +132,16 @@ impl DeterministicParser {
 
     /// Extract budget constraint from user input
     fn extract_budget(&self, input: &str) -> Option<u64> {
-        let re = Regex::new(r"budget[:\s]+\$?(\d+(?:,\d{3})*(?:\.\d{2})?)(?:k|K)?")
-            .unwrap();
+        let re = Regex::new(r"budget[:\s]+\$?(\d+(?:,\d{3})*(?:\.\d{2})?)(?:k|K)?").unwrap();
 
         if let Some(captures) = re.captures(input) {
             if let Some(amount) = captures.get(1) {
                 let amount_str = amount.as_str().replace(",", "");
                 if let Ok(mut budget) = amount_str.parse::<u64>() {
                     // Handle "k" suffix
-                    if input[amount.end()..].starts_with('k') ||
-                       input[amount.end()..].starts_with('K') {
+                    if input[amount.end()..].starts_with('k')
+                        || input[amount.end()..].starts_with('K')
+                    {
                         budget *= 1000;
                     }
                     return Some(budget);
@@ -119,8 +154,9 @@ impl DeterministicParser {
 
     /// Extract max results constraint
     fn extract_max_results(&self, input: &str) -> Option<u64> {
-        let re = Regex::new(r"(?:max|maximum|up to|top)\s+(\d+)(?:\s+(?:results?|experts?|items?))?")
-            .unwrap();
+        let re =
+            Regex::new(r"(?:max|maximum|up to|top)\s+(\d+)(?:\s+(?:results?|experts?|items?))?")
+                .unwrap();
 
         if let Some(captures) = re.captures(input) {
             if let Some(count) = captures.get(1) {
@@ -142,7 +178,12 @@ impl Default for DeterministicParser {
 
 #[async_trait::async_trait]
 impl IntentParser for DeterministicParser {
-    async fn parse(&self, user_input: &str, user_id: &str, session_id: &str) -> ParserResult<ParsedIntent> {
+    async fn parse(
+        &self,
+        user_input: &str,
+        user_id: &str,
+        session_id: &str,
+    ) -> ParserResult<ParsedIntent> {
         let start = Instant::now();
 
         if user_input.trim().is_empty() {
@@ -213,7 +254,10 @@ mod tests {
         let parser = DeterministicParser::new();
         let input = "Find experts in machine learning with budget $50000";
 
-        let result = parser.parse(input, "test_user", "test_session").await.unwrap();
+        let result = parser
+            .parse(input, "test_user", "test_session")
+            .await
+            .unwrap();
 
         assert_eq!(result.intent.action, "find_experts");
         assert!(result.intent.expertise.contains(&"ml".to_string()));
@@ -225,7 +269,10 @@ mod tests {
         let parser = DeterministicParser::new();
         let input = "Summarize the latest research on blockchain security";
 
-        let result = parser.parse(input, "test_user", "test_session").await.unwrap();
+        let result = parser
+            .parse(input, "test_user", "test_session")
+            .await
+            .unwrap();
 
         assert_eq!(result.intent.action, "summarize");
         assert!(result.intent.expertise.contains(&"blockchain".to_string()));
@@ -237,7 +284,10 @@ mod tests {
         let parser = DeterministicParser::new();
         let input = "Find cloud experts budget: $25,000";
 
-        let result = parser.parse(input, "test_user", "test_session").await.unwrap();
+        let result = parser
+            .parse(input, "test_user", "test_session")
+            .await
+            .unwrap();
 
         let constraints = &result.intent.constraints;
         assert_eq!(constraints.get("max_budget").unwrap().as_u64(), Some(25000));
@@ -248,7 +298,10 @@ mod tests {
         let parser = DeterministicParser::new();
         let input = "Find top 5 security experts";
 
-        let result = parser.parse(input, "test_user", "test_session").await.unwrap();
+        let result = parser
+            .parse(input, "test_user", "test_session")
+            .await
+            .unwrap();
 
         let constraints = &result.intent.constraints;
         assert_eq!(constraints.get("max_results").unwrap().as_u64(), Some(5));
@@ -287,7 +340,10 @@ mod tests {
         let parser = DeterministicParser::new();
         let input = "Find experts in machine learning and cybersecurity for cloud deployment";
 
-        let result = parser.parse(input, "test_user", "test_session").await.unwrap();
+        let result = parser
+            .parse(input, "test_user", "test_session")
+            .await
+            .unwrap();
 
         assert!(result.intent.expertise.contains(&"ml".to_string()));
         assert!(result.intent.expertise.contains(&"security".to_string()));
@@ -299,7 +355,10 @@ mod tests {
         let parser = DeterministicParser::new();
         let input = "Summarize the latest research on supply chain security";
 
-        let result = parser.parse(input, "test_user", "test_session").await.unwrap();
+        let result = parser
+            .parse(input, "test_user", "test_session")
+            .await
+            .unwrap();
 
         assert!(result.intent.topic_id.contains("supply"));
     }
@@ -309,20 +368,36 @@ mod tests {
         let parser = DeterministicParser::new();
         let input = "Find experts budget $50k";
 
-        let result = parser.parse(input, "test_user", "test_session").await.unwrap();
+        let result = parser
+            .parse(input, "test_user", "test_session")
+            .await
+            .unwrap();
 
-        let budget = result.intent.constraints.get("max_budget").unwrap().as_u64();
+        let budget = result
+            .intent
+            .constraints
+            .get("max_budget")
+            .unwrap()
+            .as_u64();
         assert_eq!(budget, Some(50000));
     }
 
     #[tokio::test]
     async fn test_max_results_capped_at_100() {
         let parser = DeterministicParser::new();
-        let input = "Find top 500 experts";  // Should cap at 100
+        let input = "Find top 500 experts"; // Should cap at 100
 
-        let result = parser.parse(input, "test_user", "test_session").await.unwrap();
+        let result = parser
+            .parse(input, "test_user", "test_session")
+            .await
+            .unwrap();
 
-        let max_results = result.intent.constraints.get("max_results").unwrap().as_u64();
+        let max_results = result
+            .intent
+            .constraints
+            .get("max_results")
+            .unwrap()
+            .as_u64();
         assert_eq!(max_results, Some(100));
     }
 
@@ -330,11 +405,26 @@ mod tests {
     fn test_extract_action_variants() {
         let parser = DeterministicParser::new();
 
-        assert_eq!(parser.extract_action("find experts in security"), "find_experts");
-        assert_eq!(parser.extract_action("search expert for cloud"), "find_experts");
-        assert_eq!(parser.extract_action("please summarize this document"), "summarize");
-        assert_eq!(parser.extract_action("draft proposal for AI integration"), "draft_proposal");
-        assert_eq!(parser.extract_action("research blockchain trends"), "research");
+        assert_eq!(
+            parser.extract_action("find experts in security"),
+            "find_experts"
+        );
+        assert_eq!(
+            parser.extract_action("search expert for cloud"),
+            "find_experts"
+        );
+        assert_eq!(
+            parser.extract_action("please summarize this document"),
+            "summarize"
+        );
+        assert_eq!(
+            parser.extract_action("draft proposal for AI integration"),
+            "draft_proposal"
+        );
+        assert_eq!(
+            parser.extract_action("research blockchain trends"),
+            "research"
+        );
         assert_eq!(parser.extract_action("just some random text"), "unknown");
     }
 

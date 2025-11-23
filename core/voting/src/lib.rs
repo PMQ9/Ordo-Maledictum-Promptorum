@@ -53,7 +53,7 @@
 //! # }
 //! ```
 
-use intent_schema::{Intent, ParsedIntent, VotingResult, AgreementLevel};
+use intent_schema::{AgreementLevel, Intent, ParsedIntent, VotingResult};
 use thiserror::Error;
 use tracing::{debug, info, warn};
 
@@ -108,10 +108,7 @@ impl VotingModule {
     ///
     /// * `high_confidence_threshold` - Minimum similarity for high confidence (0.0-1.0)
     /// * `low_confidence_threshold` - Minimum similarity for low confidence (0.0-1.0)
-    pub fn with_thresholds(
-        high_confidence_threshold: f64,
-        low_confidence_threshold: f64,
-    ) -> Self {
+    pub fn with_thresholds(high_confidence_threshold: f64, low_confidence_threshold: f64) -> Self {
         Self {
             high_confidence_threshold,
             low_confidence_threshold,
@@ -134,7 +131,10 @@ impl VotingModule {
         results: Vec<ParsedIntent>,
         deterministic_parser_id: Option<&str>,
     ) -> Result<VotingResult, VotingError> {
-        info!("Starting voting process with {} parser results", results.len());
+        info!(
+            "Starting voting process with {} parser results",
+            results.len()
+        );
 
         // Validate input
         if results.is_empty() {
@@ -163,11 +163,8 @@ impl VotingModule {
         let agreement_level = self.determine_agreement(min_similarity, avg_similarity);
 
         // Select canonical intent
-        let canonical_intent = self.select_canonical_intent(
-            &results,
-            &agreement_level,
-            deterministic_parser_id,
-        )?;
+        let canonical_intent =
+            self.select_canonical_intent(&results, &agreement_level, deterministic_parser_id)?;
 
         info!(
             "Voting complete: {:?}, min_sim: {:.3}, avg_sim: {:.3}",
@@ -261,8 +258,8 @@ impl VotingModule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use intent_schema::IntentMetadata;
     use chrono::Utc;
+    use intent_schema::IntentMetadata;
     use std::collections::HashMap;
     use uuid::Uuid;
 
@@ -393,11 +390,7 @@ mod tests {
     async fn test_single_parser() {
         let voting = VotingModule::new();
 
-        let intent = create_test_intent(
-            "find_experts",
-            "ml_engineering",
-            vec!["ml".to_string()],
-        );
+        let intent = create_test_intent("find_experts", "ml_engineering", vec!["ml".to_string()]);
 
         let results = vec![ParsedIntent {
             parser_id: "llm1".to_string(),

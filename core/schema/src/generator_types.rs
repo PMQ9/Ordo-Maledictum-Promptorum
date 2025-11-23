@@ -234,7 +234,7 @@ impl TrustedIntent {
         // Ensure topic_id is an identifier, not raw text
         if self.topic_id.contains(' ') || self.topic_id.len() > 100 {
             return Err(SchemaError::ValidationError(
-                "topic_id appears to contain raw user text".to_string()
+                "topic_id appears to contain raw user text".to_string(),
             ));
         }
 
@@ -242,7 +242,7 @@ impl TrustedIntent {
         for content_ref in &self.content_refs {
             if content_ref.contains('\n') || content_ref.len() > 100 {
                 return Err(SchemaError::ValidationError(
-                    "content_ref appears to contain raw content".to_string()
+                    "content_ref appears to contain raw content".to_string(),
                 ));
             }
         }
@@ -327,7 +327,7 @@ mod tests {
             id: uuid::Uuid::new_v4(),
             timestamp: chrono::Utc::now(),
             action: Action::FindExperts,
-            topic_id: "this has spaces in it".to_string(),  // Invalid!
+            topic_id: "this has spaces in it".to_string(), // Invalid!
             expertise: vec![],
             constraints: Constraints::default(),
             content_refs: vec![],
@@ -349,7 +349,7 @@ mod tests {
             topic_id: "valid_topic".to_string(),
             expertise: vec![],
             constraints: Constraints::default(),
-            content_refs: vec!["invalid\nwith\nnewlines".to_string()],  // Invalid!
+            content_refs: vec!["invalid\nwith\nnewlines".to_string()], // Invalid!
             signature: None,
             content_hash: "abc123".to_string(),
             user_id: "user_123".to_string(),

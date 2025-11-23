@@ -9,9 +9,7 @@ use tracing::{debug, info, warn};
 #[serde(rename_all = "snake_case")]
 pub enum ComparisonResult {
     /// Intent is fully approved and within all constraints
-    Approved {
-        message: String,
-    },
+    Approved { message: String },
     /// Intent has minor issues that might be acceptable with user confirmation
     SoftMismatch {
         reasons: Vec<MismatchReason>,
@@ -73,16 +71,12 @@ pub struct IntentComparator {
 impl IntentComparator {
     /// Creates a new IntentComparator with default settings
     pub fn new() -> Self {
-        Self {
-            strict_mode: false,
-        }
+        Self { strict_mode: false }
     }
 
     /// Creates a new IntentComparator with strict mode enabled
     pub fn new_strict() -> Self {
-        Self {
-            strict_mode: true,
-        }
+        Self { strict_mode: true }
     }
 
     /// Compares a user intent against provider configuration
@@ -141,8 +135,7 @@ impl IntentComparator {
                 category: MismatchCategory::ActionNotAllowed,
                 description: format!(
                     "Action '{}' is not in the allowed actions list. Allowed actions: {:?}",
-                    intent.action,
-                    config.allowed_actions
+                    intent.action, config.allowed_actions
                 ),
             });
         }
@@ -163,10 +156,7 @@ impl IntentComparator {
         let allowed_set: HashSet<&String> = config.allowed_expertise.iter().collect();
         let requested_set: HashSet<&String> = intent.expertise.iter().collect();
 
-        let unauthorized: Vec<&String> = requested_set
-            .difference(&allowed_set)
-            .copied()
-            .collect();
+        let unauthorized: Vec<&String> = requested_set.difference(&allowed_set).copied().collect();
 
         if !unauthorized.is_empty() {
             warn!(
@@ -179,8 +169,7 @@ impl IntentComparator {
                 category: MismatchCategory::ExpertiseNotAllowed,
                 description: format!(
                     "Requested expertise areas not allowed: {:?}. Allowed expertise: {:?}",
-                    unauthorized,
-                    config.allowed_expertise
+                    unauthorized, config.allowed_expertise
                 ),
             });
         }
@@ -200,8 +189,7 @@ impl IntentComparator {
                     if requested_budget > max_allowed_budget {
                         warn!(
                             requested_budget,
-                            max_allowed_budget,
-                            "Budget exceeds maximum allowed"
+                            max_allowed_budget, "Budget exceeds maximum allowed"
                         );
 
                         reasons.push(MismatchReason {
@@ -232,16 +220,14 @@ impl IntentComparator {
             .any(|r| matches!(r.severity, Severity::Critical));
 
         // In strict mode, High and Medium severity also become hard mismatches
-        let has_elevated = self.strict_mode && reasons
-            .iter()
-            .any(|r| matches!(r.severity, Severity::High | Severity::Medium));
+        let has_elevated = self.strict_mode
+            && reasons
+                .iter()
+                .any(|r| matches!(r.severity, Severity::High | Severity::Medium));
 
         if has_critical || has_elevated {
             ComparisonResult::HardMismatch {
-                message: format!(
-                    "Intent denied - {} violation(s) found",
-                    reasons.len()
-                ),
+                message: format!("Intent denied - {} violation(s) found", reasons.len()),
                 reasons,
             }
         } else {

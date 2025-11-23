@@ -100,7 +100,10 @@ pub async fn submit_approval_decision(
     // In a production system, this would trigger the processing pipeline to continue
 
     let message = if request.approved {
-        format!("Intent approved by {}. Processing will continue.", request.approver_id)
+        format!(
+            "Intent approved by {}. Processing will continue.",
+            request.approver_id
+        )
     } else {
         format!("Intent denied by {}.", request.approver_id)
     };
