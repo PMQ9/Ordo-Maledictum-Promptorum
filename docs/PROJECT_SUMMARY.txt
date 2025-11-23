@@ -1,0 +1,162 @@
+=== INTENT SEGREGATION CYBERSECURITY ARCHITECTURE ===
+
+CORE PROBLEM:
+AI systems are vulnerable to prompt injection attacks where malicious user content can manipulate system behavior. Traditional input validation fails because LLMs don't distinguish between instructions and data.
+
+FUNDAMENTAL PRINCIPLE:
+Separate user intent from user content. Never allow unvalidated user input to directly control system behavior.
+
+ARCHITECTURAL PHILOSOPHY:
+Treat user inputs as untrusted data that must be transformed into structured, validated intents before execution. Use multiple independent verification layers with consensus mechanisms to prevent single-point-of-failure.
+
+=== KEY INNOVATION ===
+
+MULTI-PARSER CONSENSUS ARCHITECTURE:
+Instead of trusting a single AI to parse user requests, use multiple independent parsers with different trust levels:
+
+1. Deterministic Parser (trust: 1.0)
+   - Rule-based, zero hallucination risk
+   - Always wins in conflict scenarios
+   - Provides security baseline
+
+2. AI Parsers (trust: 0.75-0.8)
+   - Handle natural language complexity
+   - Multiple providers for diversity
+   - Cannot override deterministic parser alone
+
+3. Voting Mechanism
+   - Compares all parser outputs
+   - High agreement (≥95%): Auto-approve
+   - Low agreement (75-95%): Use deterministic fallback
+   - Conflict (<75%): Escalate to human
+
+Result: Attackers must simultaneously compromise multiple independent systems using different technologies.
+
+=== DEFENSE-IN-DEPTH PIPELINE ===
+
+Every user request flows through 8 sequential validation layers:
+
+LAYER 1: Pattern Detection
+Fast checks for known attack patterns (injection, XSS, traversal)
+
+LAYER 2: Multi-Parser Extraction
+Independent parsers extract structured intent from natural language
+
+LAYER 3: Consensus Voting
+Compare parser outputs, select canonical interpretation
+
+LAYER 4: Policy Validation
+Check intent against provider security policies (allowed actions, constraints)
+
+LAYER 5: Human Supervision (conditional)
+High-risk or ambiguous requests require human approval
+
+LAYER 6: Intent Signing
+Create cryptographically signed, tamper-proof intent object
+
+LAYER 7: Typed Execution
+Execute ONLY via predefined typed functions - no free-form AI calls
+
+LAYER 8: Audit Logging
+Write immutable record of entire validation chain
+
+=== CRITICAL SEPARATION OF CONCERNS ===
+
+PARSING LAYER (uses AI):
+- Interprets natural language
+- Extracts structured intent
+- Multiple independent systems vote
+- Output is VALIDATED, not executed
+
+EXECUTION LAYER (no AI):
+- Receives only validated, signed intents
+- Calls predefined typed functions
+- No prompt interpretation
+- Cannot be manipulated by user input
+
+This separation ensures prompt injection in parsing cannot affect execution.
+
+=== SECURITY PROPERTIES ===
+
+MULTI-PARTY CONSENSUS:
+Attacker must bypass multiple independent parsers simultaneously
+
+DETERMINISTIC FALLBACK:
+Non-AI parser provides trusted ground truth on conflicts
+
+TYPED EXECUTION:
+Processing layer has no prompt interpretation capability
+
+IMMUTABLE AUDIT TRAIL:
+Every decision is logged and cannot be altered retroactively
+
+HUMAN-IN-THE-LOOP:
+Ambiguous cases escalate to human judgment
+
+POLICY ENFORCEMENT:
+Provider-defined security boundaries are checked before execution
+
+=== ARCHITECTURAL PATTERNS ===
+
+PATTERN 1: Trust Hierarchy
+Not all parsers are equal. Deterministic > AI > Single AI > User Input
+
+PATTERN 2: Consensus Over Authority
+Multiple weak validators are stronger than one strong validator
+
+PATTERN 3: Type Safety at Boundaries
+Validated intents are strongly typed structures, not strings
+
+PATTERN 4: Append-Only State
+Audit logs are immutable - security decisions cannot be hidden
+
+PATTERN 5: Fail-Safe Defaults
+Ambiguity triggers human review, not automatic approval
+
+=== CONCEPTUAL FLOW ===
+
+User Input (untrusted string)
+    ↓
+Malicious Pattern Detection (reject obvious attacks)
+    ↓
+Multi-Parser Ensemble (extract structured intent independently)
+    ↓
+Voting System (consensus or escalation)
+    ↓
+Policy Comparator (validate against security rules)
+    ↓
+[Optional] Human Supervisor (approve/reject/modify)
+    ↓
+Intent Generator (create signed, trusted object)
+    ↓
+Processing Engine (typed function execution only)
+    ↓
+Ledger (immutable audit record)
+    ↓
+Response (with full provenance)
+
+=== USE CASES ===
+
+- AI agent platforms accepting untrusted user commands
+- Multi-agent systems where agents could be compromised
+- Enterprise AI requiring audit trails and approval workflows
+- Research on prompt injection defense mechanisms
+- Any AI system exposed to adversarial inputs
+
+=== KEY INSIGHTS ===
+
+1. Single LLM validation is insufficient - use consensus
+2. AI should parse, not execute - separate concerns
+3. Deterministic fallback prevents AI-only attacks
+4. Human oversight handles edge cases safely
+5. Immutable logs enable forensics and compliance
+6. Type safety prevents injection in execution layer
+
+This architecture makes prompt injection exponentially harder by requiring attackers to:
+- Bypass pattern detection AND
+- Fool multiple independent parsers AND
+- Evade policy validation AND
+- Survive consensus voting AND
+- (optionally) deceive human reviewers
+
+Rather than defeating one AI, attackers must defeat an entire system of diverse validators.
