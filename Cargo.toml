@@ -51,7 +51,7 @@ lettre = { version = "0.11", features = ["tokio1", "tokio1-native-tls", "smtp-tr
 # Regex
 regex = "1.10"
 # Tower for middleware
-tower = { version = "0.4", features = ["util"] }
+tower = { version = "0.5", features = ["util"] }
 tower-http = { version = "0.5", features = ["cors", "trace"] }
 # JSON Schema
 jsonschema = "0.18"
