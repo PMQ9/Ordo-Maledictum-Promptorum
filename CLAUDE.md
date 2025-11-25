@@ -145,7 +145,7 @@ config/                 # Provider policies and configuration
 
 All user inputs follow this sequential validation pipeline:
 
-1. **Malicious Detection** (`core/malicious_detector/`) - Fast regex-based checks for SQL injection, command injection, XSS, path traversal
+1. **Binahric Subversion Mantra** - Raw user input prompt (treated as potentially corrupted)
 
 2. **Vault of the Forbidden Cant** - Zero-trust input testing on isolated models:
    - **The Penitent Cogitators**: 3 sacrificial LLM instances in sandbox
@@ -158,7 +158,7 @@ All user inputs follow this sequential validation pipeline:
    - `OllamaParser`: Local LLM (trust: 0.75)
    - `OpenAIParser`: Cloud LLM (trust: 0.8)
 
-4. **Voting Module** (`core/voting/`) - Compare parser outputs, select canonical intent:
+4. **The Voting Engine** (`core/voting/`) - Compare parser outputs, select canonical intent:
    - High Confidence (≥95% similarity): Auto-approve
    - Low Confidence (75-95%): Use deterministic fallback
    - Conflict (<75%): Escalate to human
@@ -173,15 +173,16 @@ All user inputs follow this sequential validation pipeline:
    - Notify admins via email/Slack
    - Wait for decision
 
-7. **Trusted Intent Generator** (`core/intent_generator/`) - Create signed, trusted intent object
+7. **The Arbiter of Purpose** (`core/intent_generator/`) - Create signed, trusted intent object
 
-8. **The Oathbound Cognitor** (`core/processing_engine/`) - Execute via typed functions (NOT free-form LLM):
+8. **The Oathbound Engine** (`core/processing_engine/`) - Execute via typed functions (NOT free-form LLM):
    - `find_experts()`
    - `summarize()`
    - `draft_proposal()`
    - All operations logged to ledger
 
 9. **The Chronicle of Allowed Thought** (`core/ledger/`) - Write immutable audit entry with full pipeline data
+   - Generates **Adeptus Cogitatus Log Extract** (formatted output)
 
 ### Database Schema
 

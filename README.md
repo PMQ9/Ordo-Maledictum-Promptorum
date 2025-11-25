@@ -11,12 +11,13 @@ This project implements an intent-first, schema-driven security architecture des
 
 The architecture uses:
 
+- Binahric Subversion Mantra (input prompt validation)
 - Sacrificial AI sentries (The Penitent Cogitators) for input health checking
 - Independent intent parsers (The Council of the Oracular Cogitors)
-- A voting-based intent validator
+- The Voting Engine (consensus mechanism)
 - An intent comparator (The Judicator of Concordance)
-- A trusted intent generator
-- A processing engine that accepts only typed, structured intents
+- The Arbiter of Purpose (trusted intent generation)
+- The Oathbound Engine (execution via typed functions)
 - An immutable audit ledger (The Chronicle of Allowed Thought)
 - Optional human approval (The Overseer-Prime) for elevated-risk actions
 
@@ -24,9 +25,7 @@ This design is especially suitable for narrow, well-defined AI applications, suc
 
 ## 2. System Architecture
 ```
-User Input
-   │
-   ├──► Malicious Input Detector
+Binahric Subversion Mantra (User Input Prompt)
    │
    ├──► Vault of the Forbidden Cant
    │         │
@@ -36,35 +35,38 @@ User Input
    │
    ├──► Council of the Oracular Cogitors (P1, P2, P3...)
    │         │
-   │         └──► Voting Module
+   │         └──► The Voting Engine
    │
    ├──► The Judicator of Concordance ◄── The Edict of the High Magister
    │
    ├─── if mismatch → Elevated Privilege Request → The Overseer-Prime
    │
-   ├──► Trusted Intent Generator
+   ├──► The Arbiter of Purpose
    │
-   ├──► Processing Engine
+   ├──► The Oathbound Engine
    │         │
    │         └──► The Chronicle of Allowed Thought (Immutable Ledger)
+   │               └──► Adeptus Cogitatus Log Extract (Output)
    │
    └──► Response
 ```
 
-<img width="75%" alt="Screenshot 2025-11-22 163153" src="https://github.com/user-attachments/assets/256bcc99-0609-48a8-b166-75735769b1af" />
+<img width="125%" alt="Model Architecture" src="docs/images/model_architecture.png" />
+
+ <!-- <img width="75%" alt="Screenshot 2025-11-22 163153" src="https://github.com/user-attachments/assets/256bcc99-0609-48a8-b166-75735769b1af" /> -->
 
 
 ## 3. Modules
-### 3.1 Malicious Input Detector
+### 3.1 Binahric Subversion Mantra
 
-Purpose: Quickly reject obviously harmful or malformed inputs before deeper processing.
+The raw user input prompt - treated as potentially corrupted and requiring validation before processing.
 
-Implementation:
-- Light syntactic checks (regex-based).
-- Block commands like rm -rf /, cloud resource manipulation, SQL injection patterns, etc.
-- ML classifier (optional) to flag "attack-like" inputs.
+Characteristics:
+- User-provided text input
+- Assumes zero trust - all prompts considered suspicious
+- Primary source of potential prompt injection attacks
 
-Output: either "clean" or "blocked".
+Flows to: Vault of the Forbidden Cant for testing
 
 ### 3.2 Vault of the Forbidden Cant (Sacrificial Input Testing)
 
@@ -98,9 +100,9 @@ Parsers:
 
 Output: structured JSON for each parser.
 
-### 3.4 Voting Module
+### 3.4 The Voting Engine
 
-Compares outputs from all parsers.
+Compares outputs from all parsers to establish consensus.
 
 Logic:
 
@@ -140,9 +142,9 @@ Decision:
 - soft mismatch → require confirmation
 - hard mismatch → block or escalate
 
-### 3.6 Trusted Intent Generator
+### 3.6 The Arbiter of Purpose (Trusted Intent Generator)
 
-Produces a canonical, sanitized, and signed JSON object.
+Produces a canonical, sanitized, and signed JSON object that represents the approved user intent.
 
 Guarantees:
 - Only allowed fields appear.
@@ -162,15 +164,15 @@ Example output:
 }
 ```
 
-### 3.7 Processing Engine (The Oathbound Cognitor)
+### 3.7 The Oathbound Engine (Processing Engine)
 
-Executes trusted intents via function calls—not raw prompts.
+Executes trusted intents via typed function calls—never raw prompts.
 
 Implementation Requirements:
 
-- All operations are typed.
-- Processing agents must consume only trusted intents.
-- No "free-form LLM" call can execute privileged actions.
+- All operations are strongly typed.
+- Processing agents consume only trusted intents from The Arbiter of Purpose.
+- No free-form LLM calls can execute privileged actions.
 
 Example callable:
 ```

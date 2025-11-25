@@ -27,14 +27,13 @@ Ordo Maledictum Promptorum is a defense-in-depth system designed to prevent prom
 **Multi-Layer Validation**: Instead:
 
 1. **Test** input on sacrificial models (The Penitent Cogitators in the Vault of the Forbidden Cant)
-2. **Detect** malicious patterns via regex-based analysis
-3. **Parse** user input into structured intent using multiple independent parsers (The Council of the Oracular Cogitors)
-4. **Validate** intent through consensus voting
-5. **Compare** against strict provider policies (The Judicator of Concordance checks The Edict of the High Magister)
-6. **Approve** via human review when necessary (The Overseer-Prime)
-7. **Generate** a trusted, canonical intent object
-8. **Execute** through typed function calls (not free-form LLM prompts via The Oathbound Cognitor)
-9. **Audit** every step immutably (The Chronicle of Allowed Thought)
+2. **Parse** user input into structured intent using multiple independent parsers (The Council of the Oracular Cogitors)
+3. **Validate** intent through consensus voting (The Voting Engine)
+4. **Compare** against strict provider policies (The Judicator of Concordance checks The Edict of the High Magister)
+5. **Approve** via human review when necessary (The Overseer-Prime)
+6. **Generate** a trusted, canonical intent object (The Arbiter of Purpose)
+7. **Execute** through typed function calls (not free-form LLM prompts via The Oathbound Engine)
+8. **Audit** every step immutably (The Chronicle of Allowed Thought)
 
 ### Design Goals
 
@@ -82,35 +81,12 @@ The following diagram shows the **actual code implementation** as verified by so
                                       │
                                       ▼
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃                         SECURITY PIPELINE (10 STAGES)                              ┃
+┃                         SECURITY PIPELINE (9 STAGES)                               ┃
 ┃                    (Implemented in: handlers/process.rs)                           ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│ STAGE 1: MALICIOUS INPUT DETECTION (Fast Regex-Based Filter)                       │
-│ ├─ Module: core/malicious_detector/src/lib.rs                                      │
-│ ├─ Type: Synchronous, <5ms latency                                                 │
-│ ├─ Method: Static regex patterns (no ML, no external calls)                        │
-│ │                                                                                   │
-│ │  ┌──────────────────────────────────────────────────────────────┐               │
-│ │  │  DetectionPatterns (OnceLock - compiled once)                │               │
-│ │  │  ├─ Command Injection: rm -rf, wget|bash, chmod 777          │               │
-│ │  │  ├─ SQL Injection: ' OR '1'='1, UNION SELECT, DROP TABLE     │               │
-│ │  │  ├─ XSS: <script>, javascript:, onerror=, <iframe>           │               │
-│ │  │  ├─ Path Traversal: ../, ../../etc/passwd                    │               │
-│ │  │  └─ Cloud API: aws ec2 terminate, gcloud delete, az vm      │               │
-│ │  └──────────────────────────────────────────────────────────────┘               │
-│ │                                                                                   │
-│ │  Detection Flow:                                                                 │
-│ │  user_input ──▶ [Regex Match] ──▶ BLOCKED ──▶ Ledger ──▶ 403 Response          │
-│ │                       │                                                          │
-│ │                       └─▶ CLEAN ──▶ Continue to Stage 2                         │
-│ │                                                                                   │
-│ │  Security Guarantee: Blocks known attack patterns BEFORE parsing                │
-│ └──────────────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────────────────┐
-│ STAGE 2: VAULT OF THE FORBIDDEN CANT (Sacrificial Input Testing)                   │
+│ STAGE 1: VAULT OF THE FORBIDDEN CANT (Sacrificial Input Testing)                   │
 │ ├─ Purpose: Zero-trust testing on isolated AI sentries                             │
 │ ├─ Strategy: Probe with sacrificial models without main system contact             │
 │ │                                                                                   │
@@ -140,7 +116,7 @@ The following diagram shows the **actual code implementation** as verified by so
 │ └──────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│ STAGE 3: COUNCIL OF THE ORACULAR COGITORS (Multi-Parser Parallel Execution)                         │
+│ STAGE 2: COUNCIL OF THE ORACULAR COGITORS (Multi-Parser Parallel Execution)                        │
 │ ├─ Module: core/parsers/src/ensemble.rs                                            │
 │ ├─ Type: Async parallel execution (tokio::spawn per parser)                        │
 │ ├─ Parsers are ISOLATED: No shared state, independent processes                    │
@@ -181,7 +157,7 @@ The following diagram shows the **actual code implementation** as verified by so
 │ └──────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│ STAGE 4: VOTING MODULE (Consensus Mechanism)                                       │
+│ STAGE 3: THE VOTING ENGINE (Consensus Mechanism)                                   │
 │ ├─ Module: core/voting/src/lib.rs                                                  │
 │ ├─ Purpose: Compare parser outputs, detect conflicts, select canonical intent      │
 │ │                                                                                   │
@@ -223,7 +199,7 @@ The following diagram shows the **actual code implementation** as verified by so
 ╚═════════════════════════════════════════════════════════════════════════════════════╝
 
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│ STAGE 5: THE JUDICATOR OF CONCORDANCE (Policy Enforcement)                         │
+│ STAGE 4: THE JUDICATOR OF CONCORDANCE (Policy Enforcement)                         │
 │ ├─ Module: core/comparator/src/lib.rs                                              │
 │ ├─ Purpose: Validate intent against The Edict of the High Magister (security policies) │
 │ │                                                                                   │
@@ -262,7 +238,7 @@ The following diagram shows the **actual code implementation** as verified by so
 │ └──────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│ STAGE 6: THE OVERSEER-PRIME (Human Approval Workflow)                                     │
+│ STAGE 5: THE OVERSEER-PRIME (Human Approval Workflow)                                    │
 │ ├─ Module: core/supervision/src/lib.rs                                             │
 │ ├─ Triggered When:                                                                  │
 │ │   • voting_result.requires_human_review == true  (parser conflict)              │
@@ -305,7 +281,7 @@ The following diagram shows the **actual code implementation** as verified by so
 │ └──────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│ STAGE 7: TRUSTED INTENT GENERATION (Sanitization & Normalization)                  │
+│ STAGE 6: THE ARBITER OF PURPOSE (Sanitization & Normalization)                     │
 │ ├─ Module: core/intent_generator/src/lib.rs                                        │
 │ ├─ Purpose: Remove ALL raw user content, create immutable trusted intent           │
 │ │                                                                                   │
@@ -367,7 +343,7 @@ The following diagram shows the **actual code implementation** as verified by so
 ╚═════════════════════════════════════════════════════════════════════════════════════╝
 
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│ STAGE 8: THE OATHBOUND COGNITOR (Typed Execution Only)                                  │
+│ STAGE 7: THE OATHBOUND ENGINE (Typed Execution Only)                                │
 │ ├─ Module: core/processing_engine/src/lib.rs                                       │
 │ ├─ Purpose: Execute intents via typed function calls, NO free-form LLM prompts     │
 │ │                                                                                   │
@@ -427,7 +403,7 @@ The following diagram shows the **actual code implementation** as verified by so
 │ └──────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────────┐
-│ STAGE 9: THE CHRONICLE OF ALLOWED THOUGHT (Immutable Audit Log)                                  │
+│ STAGE 8: THE CHRONICLE OF ALLOWED THOUGHT (Immutable Audit Log)                    │
 │ ├─ Module: core/ledger/src/lib.rs                                                  │
 │ ├─ Storage: PostgreSQL with immutability rules                                     │
 │ │                                                                                   │
@@ -539,12 +515,12 @@ The following diagram shows the **actual code implementation** as verified by so
 ### ✅ Safe by Design Principles Verified
 
 1. **✓ Input Segregation Enforced**
-   - Raw user input only flows through Stages 1-3
-   - Stages 4-7 operate on structured Intent objects
+   - Raw user input only flows through Stages 1-2
+   - Stages 3-8 operate on structured Intent objects
    - No raw strings reach execution engine
 
 2. **✓ Multi-Layer Defense in Depth**
-   - Layer 1: Regex malicious detection (fast filter)
+   - Layer 1: Sacrificial AI testing (corruption detection)
    - Layer 2: Multi-parser validation (redundancy)
    - Layer 3: Consensus voting (conflict detection)
    - Layer 4: Policy enforcement (whitelist)
@@ -647,17 +623,15 @@ The architecture would be production-ready after addressing the 6 improvements l
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    MALICIOUS INPUT DETECTOR                          │
-│  • Regex Pattern Matching    • ML Classification (Optional)         │
-│  • Command Injection Check   • SQL Injection Check                  │
-│  • XSS Detection             • Path Traversal Check                 │
+│                   VAULT OF THE FORBIDDEN CANT                        │
+│         (Sacrificial AI Testing - Zero Trust Input Probing)         │
+│  • The Penitent Cogitators    • Health Monitoring                   │
+│  • Model Isolation            • Corruption Detection                │
 └────────────┬────────────────────────────────────────────────────────┘
-             │
-             ├─────► [BLOCKED] ──► Ledger ──► Alert ──► Response
              │
              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      PARSER ENSEMBLE                                 │
+│              COUNCIL OF THE ORACULAR COGITORS (Parsers)              │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │
 │  │ Deterministic│  │    Ollama    │  │    OpenAI    │             │
 │  │    Parser    │  │   Parser     │  │    Parser    │             │
@@ -671,7 +645,7 @@ The architecture would be production-ready after addressing the 6 improvements l
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                       VOTING MODULE                                  │
+│                  THE VOTING ENGINE (Consensus)                       │
 │  • Compare Parser Outputs    • Calculate Similarity                 │
 │  • Detect Conflicts          • Determine Confidence                 │
 │  • Select Canonical Intent   • Generate Explanation                 │
@@ -684,7 +658,7 @@ The architecture would be production-ready after addressing the 6 improvements l
              │
              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                     INTENT COMPARATOR                                │
+│                 THE JUDICATOR OF CONCORDANCE (Policy)                │
 │  • Load Provider Policy      • Validate Action                      │
 │  • Check Expertise           • Verify Constraints                   │
 │  • Semantic Topic Matching   • Budget Limits                        │
@@ -698,7 +672,7 @@ The architecture would be production-ready after addressing the 6 improvements l
              │           │
              │           ▼
              │      ┌──────────────────────────────────────┐
-             │      │    HUMAN APPROVAL WORKFLOW           │
+             │      │      THE OVERSEER-PRIME              │
              │      │  • Create Approval Request           │
              │      │  • Notify Supervisors (Email/Slack)  │
              │      │  • Present Intent Diff UI            │
@@ -715,7 +689,7 @@ The architecture would be production-ready after addressing the 6 improvements l
              │
              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                   TRUSTED INTENT GENERATOR                           │
+│                    THE ARBITER OF PURPOSE                             │
 │  • Sanitize Intent           • Add Metadata                         │
 │  • Sign Intent               • Reference Content                    │
 │  • Validate Schema           • Ensure Immutability                  │
@@ -723,14 +697,14 @@ The architecture would be production-ready after addressing the 6 improvements l
              │
              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    PROCESSING ENGINE                                 │
+│                    THE OATHBOUND ENGINE                               │
 │  • Route to Handler          • Execute Typed Functions              │
 │  • find_experts()           • summarize()                           │
 │  • draft_proposal()         • analyze_document()                    │
 │  • No Free-form LLM calls   • All Actions Logged                    │
 └────────────┬────────────────────────────────────────────────────────┘
              │
-             ├──────────────► INTENT LEDGER (Immutable Audit Log)
+             ├──────────────► THE CHRONICLE OF ALLOWED THOUGHT (Audit Log)
              │
              ▼
 ┌─────────────────────────────────────────────────────────────────────┐

@@ -1,6 +1,6 @@
-# Intent Generator Module
+# The Arbiter of Purpose (Intent Generator Module)
 
-The Intent Generator is a critical security component that produces canonical, sanitized, and optionally signed trusted intents from voted intents.
+The Arbiter of Purpose is a critical security component that produces canonical, sanitized, and optionally signed trusted intents from voted intents.
 
 ## Purpose
 

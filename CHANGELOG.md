@@ -13,22 +13,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated Cargo.toml workspace authors
   - New project name reflects the zero-trust, sacrificial-model approach to input validation
 
-- **Architecture Refactored with New Layers**: Enhanced resilience to prompt injection
+- **Architecture Refactored with Enhanced Naming & Streamlined Pipeline**:
+  - Removed Malicious Input Detector stage (replaced by zero-trust testing philosophy)
+  - Input prompt renamed to: **Binahric Subversion Mantra**
   - Added STAGE 2: **Vault of the Forbidden Cant** - Sacrificial AI testing layer
     - **The Penitent Cogitators**: 3 isolated LLM instances for input probing
     - **The Lexicanum Diagnostica**: Health monitoring system for sacrificial models
     - Zero-trust approach treats all inputs as potentially corrupted
 
-  - Renamed Core Components to reflect new architecture:
+  - Renamed Core Components with thematic naming:
+    - Input Prompt → **Binahric Subversion Mantra**
     - Intent Parsers → **The Council of the Oracular Cogitors** (STAGE 3)
+    - Voting Module → **The Voting Engine** (STAGE 4)
     - Intent Comparator → **The Judicator of Concordance** (STAGE 5)
     - Provider Config → **The Edict of the High Magister**
     - Human Approval → **The Overseer-Prime** (STAGE 6)
-    - Processing Engine → **The Oathbound Cognitor** (STAGE 8)
+    - Trusted Intent Generator → **The Arbiter of Purpose** (STAGE 7)
+    - Processing Engine → **The Oathbound Engine** (STAGE 8)
     - Intent Ledger → **The Chronicle of Allowed Thought** (STAGE 9)
+    - Ledger Output Format → **Adeptus Cogitatus Log Extract**
 
-  - Updated all documentation diagrams from 8-stage to 10-stage pipeline
-  - Security pipeline now: Malicious Detection → Sacrificial Testing → Parser Ensemble → Voting → Comparator → Human Review → Intent Generator → Processing → Ledger
+  - Updated all documentation diagrams to reflect 9-stage pipeline (removed malicious detection)
+  - Security pipeline now: Binahric Subversion Mantra → Sacrificial Testing → Parser Ensemble → Voting Engine → Comparator → Human Review → Intent Generator → Oathbound Engine → Chronicle
 
 ### Added
 - **Formal Security Analysis** (docs/FORMAL_SECURITY_ANALYSIS.md)

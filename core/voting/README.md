@@ -1,6 +1,6 @@
-# Intent Voting Module
+# The Voting Engine (Intent Voting Module)
 
-The voting module compares outputs from multiple intent parsers (deterministic and LLM-based) to determine the canonical intent with a confidence level.
+The Voting Engine compares outputs from multiple intent parsers (deterministic and LLM-based) to determine the canonical intent with a confidence level.
 
 ## Purpose
 
