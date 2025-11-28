@@ -44,6 +44,10 @@ pub struct EngineConfig {
     pub verbose: bool,
     /// Maximum execution time in milliseconds
     pub max_execution_time_ms: u64,
+    /// Claude API key for free-form LLM calls
+    pub claude_api_key: Option<String>,
+    /// Claude model to use (default: claude-3-5-sonnet-20241022)
+    pub claude_model: String,
 }
 
 impl Default for EngineConfig {
@@ -51,6 +55,8 @@ impl Default for EngineConfig {
         Self {
             verbose: false,
             max_execution_time_ms: 30_000, // 30 seconds
+            claude_api_key: None,
+            claude_model: "claude-3-5-sonnet-20241022".to_string(),
         }
     }
 }
@@ -77,6 +83,7 @@ impl ProcessingEngine {
             "analyze_document" => Ok(Action::AnalyzeDocument),
             "generate_report" => Ok(Action::GenerateReport),
             "search_knowledge" => Ok(Action::SearchKnowledge),
+            "llm_chat" => Ok(Action::LlmChat),
             _ => Err(ProcessingError::UnsupportedAction(action.to_string())),
         }
     }
@@ -100,7 +107,7 @@ impl ProcessingEngine {
             intent.action, intent.topic_id
         );
 
-        // Dispatch to the appropriate typed function based on the action
+        // Dispatch to the appropriate function based on the action
         let result = match intent.action.as_str() {
             "find_experts" => self.execute_find_experts(intent).await,
             "summarize" => self.execute_summarize(intent).await,
@@ -108,6 +115,7 @@ impl ProcessingEngine {
             "analyze_document" => self.execute_analyze_document(intent).await,
             "generate_report" => self.execute_generate_report(intent).await,
             "search_knowledge" => self.execute_search_knowledge(intent).await,
+            "llm_chat" => self.execute_llm_chat(intent).await,
             _ => return Err(ProcessingError::UnsupportedAction(intent.action.clone())),
         };
 
@@ -273,6 +281,85 @@ impl ProcessingEngine {
         });
 
         Ok(("search_knowledge".to_string(), results, vec![]))
+    }
+
+    /// Execute a free-form LLM chat call via Claude API
+    ///
+    /// This accepts the validated intent from The Arbiter of Purpose
+    /// and uses it as a raw prompt for Claude. The intent has already
+    /// been cleaned and validated by the entire validation pipeline.
+    async fn execute_llm_chat(
+        &self,
+        intent: &Intent,
+    ) -> Result<(String, serde_json::Value, Vec<String>), ProcessingError> {
+        let api_key = match &self.config.claude_api_key {
+            Some(key) => key,
+            None => {
+                return Err(ProcessingError::ProcessingFailed(
+                    "Claude API key not configured".to_string(),
+                ))
+            }
+        };
+
+        // Build the prompt from the intent
+        // The topic_id contains the user's question/request
+        let prompt = &intent.topic_id;
+
+        let client = reqwest::Client::new();
+        let endpoint = "https://api.anthropic.com/v1/messages";
+
+        let payload = json!({
+            "model": self.config.claude_model,
+            "max_tokens": 2000,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+        });
+
+        match client
+            .post(endpoint)
+            .header("x-api-key", api_key)
+            .header("anthropic-version", "2023-06-01")
+            .header("Content-Type", "application/json")
+            .json(&payload)
+            .send()
+            .await
+        {
+            Ok(response) => {
+                match response.json::<serde_json::Value>().await {
+                    Ok(data) => {
+                        // Extract the assistant's response from the Claude API response
+                        let message = data
+                            .get("content")
+                            .and_then(|content| content.get(0))
+                            .and_then(|block| block.get("text"))
+                            .and_then(|text| text.as_str())
+                            .unwrap_or("No response from model");
+
+                        let result = json!({
+                            "response": message,
+                            "model": self.config.claude_model,
+                            "prompt": prompt,
+                            "api_response": data,
+                        });
+
+                        info!("LLM chat execution completed successfully");
+                        Ok(("llm_chat".to_string(), result, vec![]))
+                    }
+                    Err(e) => Err(ProcessingError::ProcessingFailed(format!(
+                        "Failed to parse Claude API response: {}",
+                        e
+                    ))),
+                }
+            }
+            Err(e) => Err(ProcessingError::ProcessingFailed(format!(
+                "Claude API call failed: {}",
+                e
+            ))),
+        }
     }
 }
 
@@ -448,6 +535,17 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_execute_llm_chat_missing_api_key() {
+        let engine = ProcessingEngine::new();
+        let intent = create_test_intent("llm_chat", "What is the capital of France?");
+
+        let result = engine.execute(&intent).await.unwrap();
+        assert!(!result.success);
+        assert!(result.error.is_some());
+        assert!(result.error.unwrap().contains("Claude API key not configured"));
+    }
+
+    #[tokio::test]
     async fn test_execute_find_experts() {
         let engine = ProcessingEngine::new();
 
@@ -462,7 +560,7 @@ mod tests {
         let result = engine.execute(&intent).await.unwrap();
 
         assert!(result.success);
-        assert_eq!(result.action, "find_experts");
+        assert_eq!(result.action, Action::FindExperts);
         assert!(result.data.get("experts").is_some());
         assert!(result.metadata.duration_ms < 1000);
     }
@@ -477,7 +575,7 @@ mod tests {
         let result = engine.execute(&intent).await.unwrap();
 
         assert!(result.success);
-        assert_eq!(result.action, "summarize");
+        assert_eq!(result.action, Action::Summarize);
         assert!(result.data.get("summary").is_some());
     }
 
@@ -494,7 +592,7 @@ mod tests {
         let result = engine.execute(&intent).await.unwrap();
 
         assert!(result.success);
-        assert_eq!(result.action, "draft_proposal");
+        assert_eq!(result.action, Action::DraftProposal);
         assert!(result.data.get("proposal").is_some());
     }
 

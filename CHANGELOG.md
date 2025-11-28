@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Free-form LLM Chat Support in Processing Engine** (core/processing_engine/)
+  - Added new `llm_chat` action to The Oathbound Engine for free-form Claude integration
+  - Accepts validated intents from The Arbiter of Purpose and executes them as raw prompts to Claude API
+  - New `LlmChat` variant in `Action` enum (core/schema/)
+  - Updated `EngineConfig` to support `claude_api_key` and `claude_model` configuration
+  - Default model: claude-3-5-sonnet-20241022 (configurable via environment)
+  - Automatic response extraction from Claude API responses
+  - Full integration with ledger system - all LLM responses recorded in Chronicle of Allowed Thought
+  - Security design: Operates only on validated intents after full validation pipeline (sacrificial testing, multi-parser consensus, policy comparison, human approval if needed)
+  - Test coverage: Added `test_execute_llm_chat_missing_api_key` to verify graceful handling of missing credentials
+
 ### Changed
 - **Simplified Parser Ensemble** - Removed Rule-Based and Local LLM Parsers
   - Removed `DeterministicParser`: Rule-based regex/keyword parser that defeated the purpose of using LLMs

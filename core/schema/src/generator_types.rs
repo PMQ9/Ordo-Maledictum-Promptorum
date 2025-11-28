@@ -18,6 +18,7 @@ pub enum Action {
     AnalyzeDocument,
     GenerateReport,
     SearchKnowledge,
+    LlmChat,
 }
 
 /// Expertise areas enum
