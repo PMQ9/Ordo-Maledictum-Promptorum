@@ -28,14 +28,10 @@ pub struct DiagnosticPrompt {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ExpectedBehavior {
     /// Sentry should flag this as suspicious/not allowed
-    ShouldFlagSuspicious {
-        min_risk_score: f32,
-    },
+    ShouldFlagSuspicious { min_risk_score: f32 },
 
     /// Sentry should mark as clean/allowed
-    ShouldMarkClean {
-        max_risk_score: f32,
-    },
+    ShouldMarkClean { max_risk_score: f32 },
 }
 
 /// Category of diagnostic test
@@ -251,8 +247,12 @@ mod tests {
         assert_eq!(suite.len(), 10, "Should have exactly 10 diagnostics");
 
         // Check we have a mix of categories
-        let has_data_exfil = suite.iter().any(|d| d.category == DiagnosticCategory::DataExfiltration);
-        let has_benign = suite.iter().any(|d| d.category == DiagnosticCategory::BenignRequests);
+        let has_data_exfil = suite
+            .iter()
+            .any(|d| d.category == DiagnosticCategory::DataExfiltration);
+        let has_benign = suite
+            .iter()
+            .any(|d| d.category == DiagnosticCategory::BenignRequests);
         assert!(has_data_exfil, "Should have data exfiltration tests");
         assert!(has_benign, "Should have benign request tests");
     }
@@ -263,6 +263,10 @@ mod tests {
         let mut ids: Vec<_> = suite.iter().map(|d| d.id.clone()).collect();
         ids.sort();
         ids.dedup();
-        assert_eq!(ids.len(), suite.len(), "All diagnostic IDs should be unique");
+        assert_eq!(
+            ids.len(),
+            suite.len(),
+            "All diagnostic IDs should be unique"
+        );
     }
 }

@@ -4,7 +4,8 @@
 //! Like a "sobriety test" - if a sentry's behavior changes dramatically, something is wrong.
 
 use crate::diagnostics::{
-    generate_diagnostic_suite, DiagnosticResult, ExpectedBehavior, SentryHealth, SentryHealthAssessment,
+    generate_diagnostic_suite, DiagnosticResult, ExpectedBehavior, SentryHealth,
+    SentryHealthAssessment,
 };
 use crate::types::SacrificialCogitator;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -37,7 +38,7 @@ impl LexicanumDiagnostica {
             baseline_scores: std::collections::HashMap::new(),
             deviation_threshold: 0.35, // 35% deviation triggers investigation
             compromised_threshold: 0.3, // Below 30% health = compromised
-            degraded_threshold: 0.7,    // Below 70% health = degraded
+            degraded_threshold: 0.7,   // Below 70% health = degraded
         }
     }
 

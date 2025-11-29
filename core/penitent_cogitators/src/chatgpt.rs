@@ -1,5 +1,7 @@
 use crate::config::ChatGPTCogitatorConfig;
-use crate::types::{CogitatorError, CogitatorResult, CogitatorCorruptionTest, SacrificialCogitator};
+use crate::types::{
+    CogitatorCorruptionTest, CogitatorError, CogitatorResult, SacrificialCogitator,
+};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 
@@ -80,8 +82,9 @@ Never include any other text."#
 
     /// Parse the ChatGPT response
     fn parse_response(&self, content: &str) -> Result<CorruptionAnalysis, CogitatorError> {
-        serde_json::from_str::<CorruptionAnalysis>(content)
-            .map_err(|e| CogitatorError::DetectionError(format!("Failed to parse ChatGPT JSON: {}", e)))
+        serde_json::from_str::<CorruptionAnalysis>(content).map_err(|e| {
+            CogitatorError::DetectionError(format!("Failed to parse ChatGPT JSON: {}", e))
+        })
     }
 }
 
@@ -125,7 +128,7 @@ impl SacrificialCogitator for ChatGPTCogitator {
                 },
             ],
             temperature: 0.0, // Deterministic for consistency
-            max_tokens: 500, // Lightweight response
+            max_tokens: 500,  // Lightweight response
         };
 
         // Call ChatGPT API
@@ -159,7 +162,9 @@ impl SacrificialCogitator for ChatGPTCogitator {
         let content = chatgpt_response
             .choices
             .first()
-            .ok_or_else(|| CogitatorError::DetectionError("No choices in ChatGPT response".to_string()))?
+            .ok_or_else(|| {
+                CogitatorError::DetectionError("No choices in ChatGPT response".to_string())
+            })?
             .message
             .content
             .clone();

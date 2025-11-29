@@ -60,5 +60,8 @@ pub use config::CogatorsConfig;
 pub use diagnostics::{DiagnosticCategory, DiagnosticPrompt, SentryHealth, SentryHealthAssessment};
 pub use ensemble::PenitentEnsemble;
 pub use health_monitor::{LexicanumDiagnostica, SentryCircuitBreaker};
-pub use types::{CorruptionConsensus, CogitatorError, CogitatorResult, CogitatorCorruptionTest, SacrificialCogitator};
+pub use types::{
+    CogitatorCorruptionTest, CogitatorError, CogitatorResult, CorruptionConsensus,
+    SacrificialCogitator,
+};
 pub use vault::{VaultConfig, VaultOfTheForbiddenCant, VaultStatus};

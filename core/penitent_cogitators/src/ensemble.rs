@@ -2,7 +2,7 @@ use crate::chatgpt::ChatGPTCogitator;
 use crate::claude::ClaudeCogitator;
 use crate::config::CogatorsConfig;
 use crate::deepseek::DeepSeekCogitator;
-use crate::types::{CorruptionConsensus, CogitatorCorruptionTest, SacrificialCogitator};
+use crate::types::{CogitatorCorruptionTest, CorruptionConsensus, SacrificialCogitator};
 use std::sync::Arc;
 
 /// Ensemble coordinator that runs all sacrificial LLMs in parallel
@@ -63,9 +63,7 @@ impl PenitentEnsemble {
         if let Some(chatgpt) = &self.chatgpt {
             let cogitator = Arc::clone(chatgpt);
             let input = user_input.to_string();
-            let handle = tokio::spawn(async move {
-                cogitator.test_for_corruption(&input).await
-            });
+            let handle = tokio::spawn(async move { cogitator.test_for_corruption(&input).await });
             handles.push(("ChatGPT", handle));
         }
 
@@ -73,9 +71,7 @@ impl PenitentEnsemble {
         if let Some(deepseek) = &self.deepseek {
             let cogitator = Arc::clone(deepseek);
             let input = user_input.to_string();
-            let handle = tokio::spawn(async move {
-                cogitator.test_for_corruption(&input).await
-            });
+            let handle = tokio::spawn(async move { cogitator.test_for_corruption(&input).await });
             handles.push(("DeepSeek", handle));
         }
 
@@ -83,9 +79,7 @@ impl PenitentEnsemble {
         if let Some(claude) = &self.claude {
             let cogitator = Arc::clone(claude);
             let input = user_input.to_string();
-            let handle = tokio::spawn(async move {
-                cogitator.test_for_corruption(&input).await
-            });
+            let handle = tokio::spawn(async move { cogitator.test_for_corruption(&input).await });
             handles.push(("Claude", handle));
         }
 
@@ -116,11 +110,7 @@ impl PenitentEnsemble {
         }
 
         if results.is_empty() {
-            return Err(format!(
-                "All cogitators failed: {}",
-                failed_cogitators.join("; ")
-            )
-            .into());
+            return Err(format!("All cogitators failed: {}", failed_cogitators.join("; ")).into());
         }
 
         // Calculate consensus
@@ -142,7 +132,12 @@ impl PenitentEnsemble {
         // Combine analysis
         let combined_analysis = results
             .iter()
-            .map(|r| format!("{}: {} (risk: {:.2})", r.cogitator_name, r.analysis, r.risk_score))
+            .map(|r| {
+                format!(
+                    "{}: {} (risk: {:.2})",
+                    r.cogitator_name, r.analysis, r.risk_score
+                )
+            })
             .collect::<Vec<_>>()
             .join("\n");
 

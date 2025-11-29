@@ -158,7 +158,7 @@ impl Default for CogatorsConfig {
             enable_deepseek: true,
             enable_claude: true,
             require_consensus: false, // If any flags as suspicious, it's suspicious
-            risk_threshold: 0.6, // 60% risk is concerning
+            risk_threshold: 0.6,      // 60% risk is concerning
             chatgpt: ChatGPTCogitatorConfig::default(),
             deepseek: DeepSeekCogitatorConfig::default(),
             claude: ClaudeCogitatorConfig::default(),

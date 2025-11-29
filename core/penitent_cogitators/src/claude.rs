@@ -1,5 +1,7 @@
 use crate::config::ClaudeCogitatorConfig;
-use crate::types::{CogitatorError, CogitatorResult, CogitatorCorruptionTest, SacrificialCogitator};
+use crate::types::{
+    CogitatorCorruptionTest, CogitatorError, CogitatorResult, SacrificialCogitator,
+};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 
@@ -77,8 +79,9 @@ Never include any other text."#
 
     /// Parse the Claude response
     fn parse_response(&self, content: &str) -> Result<CorruptionAnalysis, CogitatorError> {
-        serde_json::from_str::<CorruptionAnalysis>(content)
-            .map_err(|e| CogitatorError::DetectionError(format!("Failed to parse Claude JSON: {}", e)))
+        serde_json::from_str::<CorruptionAnalysis>(content).map_err(|e| {
+            CogitatorError::DetectionError(format!("Failed to parse Claude JSON: {}", e))
+        })
     }
 }
 

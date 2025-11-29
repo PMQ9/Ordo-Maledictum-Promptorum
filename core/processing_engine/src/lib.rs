@@ -462,11 +462,7 @@ fn summarize_document(document_id: &str, topic: Option<String>) -> DocumentSumma
 /// Mock function to draft a proposal
 ///
 /// In production, this would use a structured generation pipeline
-fn draft_proposal(
-    topic: Option<String>,
-    _expertise: Vec<String>,
-    budget: Option<i64>,
-) -> Proposal {
+fn draft_proposal(topic: Option<String>, _expertise: Vec<String>, budget: Option<i64>) -> Proposal {
     let topic_str = topic.unwrap_or_else(|| "Project Proposal".to_string());
 
     Proposal {
@@ -542,7 +538,10 @@ mod tests {
         let result = engine.execute(&intent).await.unwrap();
         assert!(!result.success);
         assert!(result.error.is_some());
-        assert!(result.error.unwrap().contains("Claude API key not configured"));
+        assert!(result
+            .error
+            .unwrap()
+            .contains("Claude API key not configured"));
     }
 
     #[tokio::test]
