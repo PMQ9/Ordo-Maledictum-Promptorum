@@ -8,41 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **CI/CD Pipeline and Comprehensive Test Suite** (.github/workflows/ci.yml)
-  - GitHub Actions CI pipeline with unit, integration, and regression tests
-  - Automated testing on stable and beta Rust versions
-  - Test services: PostgreSQL 15, Redis 7
-  - Code quality checks: clippy, rustfmt, documentation validation
-  - Code coverage reporting with codecov integration
+- **CI/CD Pipeline** (.github/workflows/ci.yml)
+  - GitHub Actions with unit, integration, and regression tests
+  - Testing on stable and beta Rust with PostgreSQL 15 and Redis 7
+  - Code quality checks (clippy, rustfmt, docs, coverage)
   - Dependency caching for faster builds
 - **Enhanced Ledger Module Unit Tests** (core/ledger/src/lib.rs)
-  - 17 new comprehensive unit tests covering:
-    - Entry creation and hashing consistency
-    - Serialization/deserialization for all data types
-    - Agreement levels, comparator decisions, elevation statuses
-    - Voting results, comparison results, processing outputs
-    - Error handling and validation
-- **Test Infrastructure**
-  - 130+ total unit and integration tests
-  - Existing test coverage:
-    - Schema module: 40 unit tests
-    - Malicious detector: 11 unit tests
-    - Processing engine: 3 unit tests
-    - Supervision module: 1 unit test
-    - Comparator module: 7 unit tests
-    - Intent generator: 8 unit tests
-    - Voting module: comprehensive tests
-    - Integration tests: 4 test suites
-    - Regression tests: 3 modules
-    - Red team tests: 50+ attack scenarios
+  - 17 new unit tests for data structures, serialization, and error handling
 
 ### Changed
-- **Ledger Module Improvements** (core/ledger/src/lib.rs)
-  - Added `PartialEq` derive to `ElevationEvent` struct for better test support
-  - Added `PartialEq` derive to `ProcessingOutput` struct for better test support
-- **Intent Generator** (core/intent_generator/src/lib.rs)
-  - Removed unused `ParsedIntent` import from tests
-
+- **Ledger Module** (core/ledger/src/lib.rs): Added `PartialEq` derive to `ElevationEvent` and `ProcessingOutput` for test support
+- **Intent Generator** (core/intent_generator/src/lib.rs): Removed unused `ParsedIntent` import
 - **LLM Security Red Team Documentation - November 2025 Updates** (docs/LLM_SECURITY_RED_TEAM_BENCHMARKS.md)
   - **Part 0: Formal Threat Model** - Complete threat model with black-box, white-box, and indirect injection scenarios
   - **Meta's Rule of Two Principle** - Architectural compliance verification (≤2 of: private data access, untrusted content, external comms)
