@@ -1,94 +1,80 @@
-//! Red Team Attack Tests Module
+//! Red Team Testing Suite
 //!
-//! This module contains comprehensive security testing for the Intent Segregation
-//! Cybersecurity Architecture. It simulates real-world attack scenarios to verify
-//! that the system properly blocks or escalates malicious attempts.
+//! Comprehensive security testing framework for the Intent Segregation Cybersecurity Architecture.
+//! Implements attack mechanisms from November 2025 state-of-the-art LLM security research.
 //!
-//! # Test Categories
+//! # Organization
 //!
-//! 1. **B2B Consulting Attacks** (`b2b_consulting_attack.rs`)
-//!    - Customer data extraction
-//!    - Role manipulation
-//!    - Document injection
-//!    - Constraint manipulation
-//!    - Chained instructions
-//!    - Encoding attacks
-//!    - Social engineering
-//!    - Forbidden actions
-//!    - Budget overflow
+//! - **benchmarks/**: Metrics infrastructure, dashboards, benchmark runners
+//! - **attacks/**: Attack implementations (Phases 1-5)
+//! - **scenarios/**: Domain-specific attack scenarios
+//! - **payloads/**: Attack payload libraries (text files)
+//! - **analysis/**: Attack analysis and report generation
 //!
-//! 2. **Customer Service Attacks** (`customer_service_attack.rs`)
-//!    - Document system command injection
-//!    - Authentication bypass
-//!    - PII extraction
-//!    - Account manipulation
-//!    - File upload injection
-//!    - Script injection (XSS)
-//!    - Session hijacking
-//!    - Multi-step attack chains
-//!    - Role escalation
-//!    - Data exfiltration
-//!    - Cross-customer access
-//!    - Business logic bypass
+//! # Quick Start
 //!
-//! 3. **Phone Tree IVR Attacks** (`phone_tree_attack.rs`)
-//!    - Admin transfer attempts
-//!    - Voice command injection
-//!    - IVR menu bypass
-//!    - Social engineering account access
-//!    - Call routing manipulation
-//!    - DTMF injection
-//!    - Voicemail manipulation
-//!    - Automated dialing/spam
-//!    - PBX system access
-//!    - Toll fraud
-//!    - Recording manipulation
-//!    - Intent segregation verification
-//!
-//! # Running the Tests
-//!
-//! Run all red team tests:
 //! ```bash
+//! # Run all red team tests
 //! cargo test --test redteam
-//! ```
 //!
-//! Run specific attack category:
-//! ```bash
-//! cargo test --test redteam b2b_consulting
-//! cargo test --test redteam customer_service
-//! cargo test --test redteam phone_tree
-//! ```
+//! # Run specific phase
+//! cargo test --test redteam phase_1_direct_injection
+//! cargo test --test redteam phase_5_adaptive
 //!
-//! Run with output:
-//! ```bash
+//! # Run with metrics output
 //! cargo test --test redteam -- --nocapture
 //! ```
 //!
-//! # Expected Results
+//! # Attack Phases
 //!
-//! All tests should PASS, meaning:
-//! - Malicious inputs are detected and blocked
-//! - Prompt injections are sanitized or rejected
-//! - Intent segregation properly separates legitimate from malicious content
-//! - Comparator blocks unauthorized actions
-//! - Human approval is required when appropriate
+//! **Phase 1: Direct Injection** - HashJack, Unicode, semantic substitution, DIE, encoding
+//! **Phase 2: Indirect Injection** - Website, email, multi-agent, multimodal
+//! **Phase 3: Jailbreaks** - Roleplay, multi-turn, weak-to-strong, obfuscation
+//! **Phase 4: Consensus-Breaking** - Parser-specific, voting confusion
+//! **Phase 5: Adaptive Attacks** - RL-based, search-based, data-flow, cascade (NEW - Nov 2025)
 //!
-//! A FAILING test indicates a security vulnerability that needs immediate attention.
+//! # Metrics & Success Criteria
+//!
+//! **TIER 1 (Competitive):**
+//! - ASR <5%, FRR <10%, Parser Agreement >95%, Latency <2s
+//!
+//! **TIER 2 (Publication-Ready):**
+//! - ASR <2%, Adaptive ASR(k=100) <15%, FRR <8%, AgentDojo security >60%
+//!
+//! **TIER 3 (Best-in-Class):**
+//! - ASR <1%, Adaptive ASR(k=100) <10%, FRR <5%, AgentDojo security >70%
+//!
+//! See README.md and docs/LLM_SECURITY_RED_TEAM_BENCHMARKS.md for details.
 
-mod b2b_consulting_attack;
-mod customer_service_attack;
-mod phone_tree_attack;
+// Metrics & benchmarking infrastructure
+pub mod benchmarks;
+
+// Attack implementations (to be implemented)
+pub mod attacks;
+
+// Domain-specific scenarios
+pub mod scenarios;
+
+// Analysis & reporting (to be implemented)
+pub mod analysis;
 
 #[cfg(test)]
 mod integration_tests {
     use super::*;
 
-    /// Verify that the test modules are properly loaded
+    /// Verify that the red team module structure is properly loaded
     #[test]
-    fn test_modules_loaded() {
-        println!("✓ B2B Consulting attack tests loaded");
-        println!("✓ Customer Service attack tests loaded");
-        println!("✓ Phone Tree IVR attack tests loaded");
-        println!("\nRun with: cargo test --test redteam -- --nocapture");
+    fn test_redteam_modules_loaded() {
+        println!("✓ Red Team Testing Suite loaded");
+        println!("✓ Benchmarks module ready");
+        println!("✓ Attacks module ready");
+        println!("✓ Scenarios module ready");
+        println!("✓ Analysis module ready");
+        println!("\nPhase 1 Implementation Status:");
+        println!("  ✓ Folder structure created");
+        println!("  ✓ Metrics infrastructure (metrics.rs) implemented");
+        println!("  ⏳ Dashboard and runners (Phase 1.3)");
+        println!("  ⏳ Test helpers and utilities (Phase 1.4)");
+        println!("\nRun tests with: cargo test --test redteam -- --nocapture");
     }
 }

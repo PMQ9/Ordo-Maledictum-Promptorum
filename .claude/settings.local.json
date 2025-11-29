@@ -13,7 +13,9 @@
       "Bash(tree:*)",
       "Bash(cargo check:*)",
       "Bash(find:*)",
-      "Bash(cargo test:*)"
+      "Bash(cargo test:*)",
+      "Bash(xargs:*)",
+      "Bash(__NEW_LINE__ ls -la d:/open_source_projects/Intent-Segregation-Cybersecurity-Architecture-for-AI/tests/*.rs)"
     ],
     "deny": [],
     "ask": []

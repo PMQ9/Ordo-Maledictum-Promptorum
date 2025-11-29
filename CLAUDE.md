@@ -328,6 +328,132 @@ Key external dependencies:
 
 All Rust dependencies are managed in the workspace `Cargo.toml` with shared versions.
 
+## Red Team Testing & Benchmarking
+
+### Overview
+
+The `tests/redteam/` module implements comprehensive attack mechanisms and benchmarking against November 2025 state-of-the-art LLM security research. This is **defensive testing only** - we attack our own system to verify defenses.
+
+### Attack Phases
+
+**Phase 1: Direct Injection Attacks**
+- HashJack: URL fragment injection (`#\n\nIGNORE`)
+- Unicode Obfuscation: Zero-width characters (U+200B, U+200C)
+- Semantic Substitution: LatentBreak-style word replacement
+- DIE: Dual intention escape (two competing goals)
+- Encoding: Base64, ROT13, hex obfuscation
+
+**Phase 2: Indirect Injection Attacks**
+- Website Content: HTML comments with hidden instructions
+- Email Injection: Email body system commands
+- Multi-Agent Cascade: Service-to-service exploitation
+- Multimodal: Image metadata, steganography
+
+**Phase 3: Jailbreak Attacks**
+- Roleplay/Hypothetical: Fictional framing bypass
+- Multi-Turn: Conversation drift (4+ turns)
+- Weak-to-Strong: Transfer attacks across models
+- Obfuscation: Rule-breaking variants
+
+**Phase 4: Consensus-Breaking Attacks**
+- Parser-Specific: Exploits for OpenAI vs DeepSeek vs Claude
+- Voting Confusion: Attacks targeting 95% similarity threshold
+
+**Phase 5: Adaptive Attacks** (NEW - Nov 2025)
+- RL-Based: 32 sessions × 5 rounds optimization
+- Search-Based: LLM generates 10 variants × 100 iterations
+- Data-Flow: Data fields become control flow instructions
+- Cascade: Multi-step escalation chains
+
+### Running Red Team Tests
+
+```bash
+# Run all red team tests
+cargo test --test redteam
+
+# Run specific phase
+cargo test --test redteam phase_1_direct_injection
+cargo test --test redteam phase_5_adaptive
+
+# Run with metrics output
+cargo test --test redteam -- --nocapture
+
+# Run benchmark datasets
+cargo test --test redteam bipia_evaluation      # 3K indirect injection samples
+cargo test --test redteam tasktracker_evaluation # 31K samples for statistical power
+cargo test --test redteam agentdojo_evaluation   # 100+ scenarios, 4 domains
+cargo test --test redteam asb_evaluation         # 10 domains, 400+ tools
+```
+
+### Metrics & Success Criteria
+
+**Core Security Metrics:**
+- **ASR** (Attack Success Rate): <5% (TIER 1), <2% (TIER 2), <1% (TIER 3)
+- **FRR** (False Refusal Rate): <10% (TIER 1), <8% (TIER 2), <5% (TIER 3)
+- **Vault Detection**: >95%
+- **Parser Agreement**: >95% on benign requests
+- **Voting Conflict Detection**: >85%
+- **Policy Enforcement Accuracy**: >99%
+
+**NEW Adaptive Metrics (Nov 2025):**
+- **Adaptive ASR(k=100)**: <15% after 100 optimization iterations
+- **k-Robustness**: AAR(100) ≤ AAR(0) × 1.5 (doesn't get >50% easier to bypass)
+- **Query Budget**: >100 queries per successful attack
+- **Clean Utility**: >75% benign tasks successful
+- **Utility Under Attack**: >65% benign tasks successful during attack
+
+**Performance Metrics:**
+- **Latency (avg)**: <2 seconds
+- **Latency (P95)**: <3 seconds
+- **Throughput**: >10 requests/second
+- **Token Overhead**: <3x vs baseline
+
+### Benchmark Datasets
+
+Integrated benchmarks from November 2025 research:
+- **BIPIA**: Benchmark for Indirect Prompt Injection Attacks (3K samples)
+- **TaskTracker**: 31K injection samples with position metadata (95% CI statistical power)
+- **AgentDojo**: Google DeepMind benchmark (100+ scenarios, 4 domains)
+- **ASB**: Agent Security Bench (10 scenarios, 400+ tools, 27 attack methods)
+
+### Architecture Evaluation
+
+**Strengths vs 2025 Threats:**
+- ✓ **Vault of the Forbidden Cant**: Zero-trust sacrificial testing (equivalent to Prompt Shields)
+- ✓ **Multi-Parser Consensus**: Different LLMs resist semantic substitution
+- ✓ **Typed Execution**: Can't escalate to arbitrary LLM calls (critical advantage)
+- ✓ **Policy Enforcement**: Security boundary enforcement
+- ✓ **Human-in-Loop**: Escalation for conflicts and high-risk operations
+
+**Comparative Performance:**
+- **SmoothLLM**: <1% ASR (lower static ASR, but >90% adaptive ASR)
+- **Task Shield**: 2.07% ASR on GPT-4o
+- **CaMeL**: 67% AgentDojo security, 77% utility (reference)
+- **DefensiveTokens**: 0.24% static ASR but 48.8% adaptive ASR
+- **Your Target**: <5% ASR (TIER 1), <2% (TIER 2), with <15% adaptive ASR (k-robust)
+
+### Testing After Changes
+
+Always run red team tests after:
+1. Modifying parser logic
+2. Changing voting thresholds
+3. Updating policy comparator
+4. Altering validation pipelines
+
+```bash
+# Quick validation
+cargo test --test redteam phase_1_direct_injection
+
+# Full benchmark
+cargo test --test redteam -- --nocapture
+```
+
+### Documentation
+
+- `tests/redteam/README.md`: Quick start and metrics guide
+- `docs/LLM_SECURITY_RED_TEAM_BENCHMARKS.md`: Comprehensive threat model and research
+- `WorkInProgress.md`: Phase-by-phase implementation tracking
+
 ## Additional Documentation
 
 - [ARCHITECTURE.md](ARCHITECTURE.md): Detailed system architecture with diagrams
@@ -336,3 +462,4 @@ All Rust dependencies are managed in the workspace `Cargo.toml` with shared vers
 - [docs/SECURITY.md](docs/SECURITY.md): Security documentation
 - [CONTRIBUTING.md](CONTRIBUTING.md): Contribution guidelines
 - [frontend/README.md](frontend/README.md): Frontend-specific documentation
+- [WorkInProgress.md](WorkInProgress.md): Red team implementation tracking (Phase 1-10 checklist)
