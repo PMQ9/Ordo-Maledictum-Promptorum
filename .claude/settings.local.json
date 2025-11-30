@@ -14,7 +14,10 @@
       "Bash(find:*)",
       "Bash(cargo test:*)",
       "Bash(xargs:*)",
-      "Bash(SQLX_OFFLINE=true cargo build:*)"
+      "Bash(SQLX_OFFLINE=true cargo build:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git log:*)",
+      "Bash(git secrets:*)"
     ],
     "deny": [],
     "ask": []

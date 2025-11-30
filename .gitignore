@@ -43,4 +43,3 @@ temp/
 
 # Environment files
 .env
-.env.example
