@@ -1,3 +1,4 @@
+pub mod cache_helper;
 pub mod claude;
 pub mod config;
 pub mod deepseek;

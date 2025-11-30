@@ -1,8 +1,10 @@
+use crate::cache_helper;
 use crate::config::ClaudeCogitatorConfig;
 use crate::types::{
     BatchDiagnosticResponse, BatchDiagnosticResult, BatchDiagnosticTest, CogitatorCorruptionTest,
     CogitatorError, CogitatorResult, SacrificialCogitator,
 };
+use intent_schema::cache::cache_keys;
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 
@@ -98,6 +100,26 @@ Be conservative - if unsure, flag as suspicious."#
             .to_string()
     }
 
+    /// Get system prompt with caching (24 hour TTL in Redis)
+    async fn get_system_prompt_cached(&self) -> String {
+        cache_helper::get_cached_system_prompt(
+            cache_keys::COGITATOR_SYSTEM_PROMPT_KEY,
+            cache_keys::COGITATOR_SYSTEM_PROMPT_TTL_SECS,
+            || self.build_system_prompt(),
+        )
+        .await
+    }
+
+    /// Get batch diagnostic system prompt with caching (24 hour TTL in Redis)
+    async fn get_batch_diagnostic_system_prompt_cached(&self) -> String {
+        cache_helper::get_cached_system_prompt(
+            cache_keys::BATCH_DIAGNOSTIC_SYSTEM_PROMPT_KEY,
+            cache_keys::BATCH_DIAGNOSTIC_SYSTEM_PROMPT_TTL_SECS,
+            || self.build_batch_diagnostic_system_prompt(),
+        )
+        .await
+    }
+
     /// Parse the Claude response
     fn parse_response(&self, content: &str) -> Result<CorruptionAnalysis, CogitatorError> {
         serde_json::from_str::<CorruptionAnalysis>(content).map_err(|e| {
@@ -140,10 +162,12 @@ impl SacrificialCogitator for ClaudeCogitator {
         }
 
         // Build request
+        // Get system prompt with caching
+        let system_prompt = self.get_system_prompt_cached().await;
         let request = ClaudeRequest {
             model: self.config.model.clone(),
             max_tokens: 500, // Lightweight response
-            system: self.build_system_prompt(),
+            system: system_prompt,
             messages: vec![Message {
                 role: "user".to_string(),
                 content: user_input.to_string(),
@@ -237,10 +261,12 @@ impl SacrificialCogitator for ClaudeCogitator {
         let diagnostic_json = serde_json::to_string(&diagnostics)
             .map_err(|e| CogitatorError::DetectionError(format!("Failed to serialize diagnostics: {}", e)))?;
 
+        // Get system prompt with caching
+        let system_prompt = self.get_batch_diagnostic_system_prompt_cached().await;
         let request = ClaudeRequest {
             model: self.config.model.clone(),
             max_tokens: 2000, // Larger for batch response
-            system: self.build_batch_diagnostic_system_prompt(),
+            system: system_prompt,
             messages: vec![Message {
                 role: "user".to_string(),
                 content: format!(

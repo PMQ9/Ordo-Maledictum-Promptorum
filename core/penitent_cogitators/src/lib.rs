@@ -46,6 +46,7 @@
 //! - `DEEPSEEK_API_KEY` or `DEEPSEEK_COGITATOR_API_KEY` - DeepSeek API key
 //! - `CLAUDE_API_KEY` or `CLAUDE_COGITATOR_API_KEY` - Claude API key
 
+pub mod cache_helper;
 pub mod chatgpt;
 pub mod claude;
 pub mod config;

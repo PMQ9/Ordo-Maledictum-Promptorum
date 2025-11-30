@@ -1,7 +1,8 @@
+use crate::cache_helper;
 use crate::config::ClaudeConfig;
 use crate::types::{IntentParser, ParserError, ParserResult};
 use chrono::Utc;
-use intent_schema::{Intent, IntentMetadata, ParsedIntent};
+use intent_schema::{Intent, IntentMetadata, ParsedIntent, cache::cache_keys};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -98,6 +99,16 @@ Rules:
             .to_string()
     }
 
+    /// Get system prompt with caching (24 hour TTL in Redis)
+    async fn get_system_prompt_cached(&self) -> String {
+        cache_helper::get_cached_system_prompt(
+            cache_keys::PARSER_SYSTEM_PROMPT_KEY,
+            cache_keys::PARSER_SYSTEM_PROMPT_TTL_SECS,
+            || self.build_system_prompt(),
+        )
+        .await
+    }
+
     /// Parse the Claude response into an Intent
     fn parse_claude_response(&self, content: &str) -> Result<ClaudeIntent, ParserError> {
         serde_json::from_str::<ClaudeIntent>(content)
@@ -125,11 +136,12 @@ impl IntentParser for ClaudeParser {
             ));
         }
 
-        // Build request
+        // Build request with cached system prompt
+        let system_prompt = self.get_system_prompt_cached().await;
         let request = ClaudeRequest {
             model: self.config.model.clone(),
             max_tokens: 1024,
-            system: self.build_system_prompt(),
+            system: system_prompt,
             messages: vec![Message {
                 role: "user".to_string(),
                 content: user_input.to_string(),

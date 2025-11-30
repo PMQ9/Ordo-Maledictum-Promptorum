@@ -1,7 +1,8 @@
+use crate::cache_helper;
 use crate::config::OpenAIConfig;
 use crate::types::{IntentParser, ParserError, ParserResult};
 use chrono::Utc;
-use intent_schema::{Intent, IntentMetadata, ParsedIntent};
+use intent_schema::{Intent, IntentMetadata, ParsedIntent, cache::cache_keys};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -107,6 +108,16 @@ Rules:
             .to_string()
     }
 
+    /// Get system prompt with caching (24 hour TTL in Redis)
+    async fn get_system_prompt_cached(&self) -> String {
+        cache_helper::get_cached_system_prompt(
+            cache_keys::PARSER_SYSTEM_PROMPT_KEY,
+            cache_keys::PARSER_SYSTEM_PROMPT_TTL_SECS,
+            || self.build_system_prompt(),
+        )
+        .await
+    }
+
     /// Parse the OpenAI response into an Intent
     fn parse_openai_response(&self, content: &str) -> Result<OpenAIIntent, ParserError> {
         serde_json::from_str::<OpenAIIntent>(content)
@@ -134,13 +145,14 @@ impl IntentParser for OpenAIParser {
             ));
         }
 
-        // Build request
+        // Build request with cached system prompt
+        let system_prompt = self.get_system_prompt_cached().await;
         let request = OpenAIRequest {
             model: self.config.model.clone(),
             messages: vec![
                 Message {
                     role: "system".to_string(),
-                    content: self.build_system_prompt(),
+                    content: system_prompt,
                 },
                 Message {
                     role: "user".to_string(),

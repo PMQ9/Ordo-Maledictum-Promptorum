@@ -5,6 +5,7 @@ edition.workspace = true
 
 [dependencies]
 intent-schema = { path = "../schema" }
+intent-redis-cache = { path = "../redis_cache", optional = true }
 tokio.workspace = true
 reqwest.workspace = true
 serde.workspace = true
@@ -17,6 +18,10 @@ async-trait = "0.1"
 chrono.workspace = true
 uuid.workspace = true
 md5 = "0.7"
+
+[features]
+default = []
+caching = ["intent-redis-cache"]
 
 [dev-dependencies]
 tracing-subscriber.workspace = true
