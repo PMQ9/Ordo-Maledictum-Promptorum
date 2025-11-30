@@ -26,6 +26,10 @@ caching = ["intent-redis-cache"]
 
 [dev-dependencies]
 tracing-subscriber.workspace = true
+malicious-detector = { path = "../malicious_detector" }
+intent-voting = { path = "../voting" }
+intent-comparator = { path = "../comparator" }
+dotenv = "0.15"
 
 [[example]]
 name = "basic_usage"

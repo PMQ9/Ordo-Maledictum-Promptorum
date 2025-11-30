@@ -126,6 +126,43 @@ cargo test -- --nocapture
 cargo test -- --ignored
 ```
 
+### Troubleshooting
+
+**Common API Configuration Issues:**
+
+1. **OpenAI Temperature Error**
+   - Error: `Unsupported value: 'temperature' does not support 0.0 with this model`
+   - Fix: Set `OPENAI_TEMPERATURE=1.0` in .env (gpt-4o-mini and newer models require temperature >= 1.0)
+
+2. **DeepSeek Model Not Found**
+   - Error: `Model Not Exist` (400 Bad Request)
+   - Fix: Use `DEEPSEEK_MODEL=deepseek-chat` in .env (not deepseek-v3.2-exp)
+   - Valid models: `deepseek-chat`, `deepseek-coder`
+
+3. **Claude Model Not Found**
+   - Error: `model: claude-haiku-4-5-20250514` or `model: claude-3-haiku-20250122` (404 Not Found)
+   - Fix: Use valid model names in .env (verified working as of January 2025):
+     - ✅ `CLAUDE_MODEL=claude-3-haiku-20240307` (Claude 3 Haiku - cheapest at $0.25/$1.25 per M tokens)
+     - ✅ `CLAUDE_MODEL=claude-3-5-haiku-20241022` (Claude 3.5 Haiku - newer, similar pricing)
+     - ✅ `CLAUDE_MODEL=claude-3-haiku-latest` (alias to latest Haiku version)
+     - `CLAUDE_MODEL=claude-sonnet-4-5` (for execution engine - more expensive)
+   - **Important**: Model names like `claude-haiku-4-5-20250514` or `claude-3-haiku-20250122` do NOT exist
+   - If .env changes aren't loading, try: `cargo clean -p intent-parsers` then rebuild
+
+4. **Database Migration Issues**
+   - Error: `relation "ledger_entries" does not exist`
+   - Fix: Run migrations manually:
+     ```bash
+     docker exec -i intent-postgres psql -U intent_user -d intent_segregation < core/ledger/migrations/20250101000001_init.sql
+     ```
+   - Or ensure database is migrated before running tests
+
+**Valid Model Names Reference (verified working as of January 2025):**
+- **OpenAI**: `gpt-4o-mini`, `gpt-5-nano` (requires temperature=1.0)
+- **DeepSeek**: `deepseek-chat`, `deepseek-coder`
+- **Claude**: `claude-3-haiku-20240307` ✅, `claude-3-5-haiku-20241022` ✅, `claude-3-haiku-latest` ✅, `claude-sonnet-4-5`
+  - ❌ `claude-3-haiku-20250122` does NOT exist (invalid model name)
+
 ### Linting & Formatting
 ```bash
 # Format code

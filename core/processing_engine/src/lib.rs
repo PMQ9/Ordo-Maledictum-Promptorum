@@ -56,7 +56,7 @@ impl Default for EngineConfig {
             verbose: false,
             max_execution_time_ms: 30_000, // 30 seconds
             claude_api_key: None,
-            claude_model: "claude-3-5-sonnet-20241022".to_string(),
+            claude_model: "claude-3-haiku-20240307".to_string(), // Cheapest Claude model
         }
     }
 }

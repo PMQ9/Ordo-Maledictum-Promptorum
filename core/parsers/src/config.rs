@@ -6,7 +6,7 @@ pub struct OpenAIConfig {
     /// OpenAI API key
     pub api_key: String,
 
-    /// Model to use (e.g., "gpt-4o-mini")
+    /// Model to use (e.g., "gpt-5-nano")
     pub model: String,
 
     /// Temperature (should be 0 for deterministic output)
@@ -23,8 +23,8 @@ impl Default for OpenAIConfig {
     fn default() -> Self {
         Self {
             api_key: String::new(),
-            model: "gpt-4o-mini".to_string(),
-            temperature: 0.0,
+            model: "gpt-5-nano".to_string(), // Cheapest OpenAI model
+            temperature: 1.0,
             timeout_secs: 30,
             base_url: "https://api.openai.com/v1".to_string(),
         }
@@ -113,7 +113,7 @@ impl Default for ClaudeConfig {
     fn default() -> Self {
         Self {
             api_key: String::new(),
-            model: "claude-3-5-sonnet-20241022".to_string(),
+            model: "claude-3-haiku-20240307".to_string(),
             temperature: 0.0,
             timeout_secs: 30,
             base_url: "https://api.anthropic.com/v1".to_string(),
@@ -177,11 +177,11 @@ impl ParserConfig {
         let claude_api_key = std::env::var("CLAUDE_API_KEY").unwrap_or_default();
 
         let openai_model =
-            std::env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-4o-mini".to_string());
+            std::env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-5-nano".to_string());
         let deepseek_model =
             std::env::var("DEEPSEEK_MODEL").unwrap_or_else(|_| "deepseek-chat".to_string());
         let claude_model = std::env::var("CLAUDE_MODEL")
-            .unwrap_or_else(|_| "claude-3-5-sonnet-20241022".to_string());
+            .unwrap_or_else(|_| "claude-3-haiku-20240307".to_string());
 
         Ok(Self {
             enable_openai: std::env::var("ENABLE_OPENAI")
