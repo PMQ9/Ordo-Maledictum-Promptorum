@@ -14,6 +14,39 @@ Ordo Maledictum Promptorum - A Rust-based security system designed to prevent pr
 
 **NEVER create documentation files unless requested** - Do not proactively create .md, .txt, or other documentation files. Only create documentation files if explicitly requested by the user. This keeps the repository clean and focused. Always prefer editing existing files instead of creating new ones.
 
+**NEVER commit changes unless explicitly authorized** - Do not make any git commits without explicit permission from the user. Always ask for permission before committing code changes, even if changes are complete and tested.
+
+## API Usage & Cost Optimization
+
+**CRITICAL: Minimize API calls** - Only make API calls when absolutely necessary. Every API call incurs costs and adds latency to the system.
+
+**Dual API Keys for Claude:**
+- `CLAUDE_SACRIFICIAL_API_KEY`: For sacrificial LLMs (The Penitent Cogitators) - use smallest/cheapest models
+- `CLAUDE_API_KEY`: For main LLM parsers (The Council of the Oracular Cogitors) - standard models
+
+**Sacrificial LLM Model Selection** (use smallest available models - these are disposable sentries):
+- **DeepSeek Sacrificial**: DeepSeek-V3.2 (or smallest available)
+- **OpenAI Sacrificial**: gpt-5-nano (or smallest nano model available)
+- **Claude Sacrificial**: claude-3-haiku ($0.25/$1.25 per M tokens - cheapest Claude)
+
+**Council LLM Model Selection** (Consensus voting for intent parsing - use cheapest models):
+- **Claude Council**: claude-3-haiku ($0.25/$1.25 per M tokens - cheapest Claude)
+- **OpenAI Council**: gpt-5-nano (cheapest model)
+- **DeepSeek Council**: deepseek-chat (consensus voting)
+
+**Execution Engine (The Oathbound Engine) - PRIMARY/MAIN LLM** (Balanced model for critical execution):
+- **Claude ONLY** - No OpenAI or DeepSeek for execution
+- **Model**: claude-sonnet-4-5 ($3/$15 per M tokens - balanced cost/capability for typed function calls)
+- Uses Claude API for all typed function execution
+- This is the actual "main" LLM where output quality matters most
+
+**API Call Guidelines:**
+1. Only invoke sacrificial LLM testing when input validation is needed
+2. Cache LLM parser outputs where possible to avoid redundant calls
+3. Batch requests when feasible
+4. Monitor API usage regularly to detect inefficiencies
+5. Use rate limiting to prevent cost overruns
+
 ## Change Documentation
 
 **IMPORTANT - Review Before Committing**: Always review all changes before committing. Changes should be staged, reviewed for correctness, and verified to compile/test before being committed to the repository.
