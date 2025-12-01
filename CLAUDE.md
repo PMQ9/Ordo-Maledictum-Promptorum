@@ -60,6 +60,8 @@ Ordo Maledictum Promptorum - A Rust-based security system designed to prevent pr
 
 ## Change Documentation
 
+**IMPORTANT - Document After Implementation**: After completing any feature, bug fix, or significant change, document it in both CLAUDE.md and CHANGELOG.md for future reference. This ensures knowledge is preserved and discoverable.
+
 **IMPORTANT - Review Before Committing**: Always review all changes before committing. Changes should be staged, reviewed for correctness, and verified to compile/test before being committed to the repository.
 
 **IMPORTANT - Update Changelog**: Whenever you make changes to this codebase, update [CHANGELOG.md](CHANGELOG.md) with a short summary of your changes. Follow the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and categorize changes as:
@@ -69,6 +71,14 @@ Ordo Maledictum Promptorum - A Rust-based security system designed to prevent pr
 - **Removed**: Deleted features or files
 - **Fixed**: Bug fixes
 - **Security**: Security-related changes
+
+**IMPORTANT - Update CLAUDE.md**: For significant changes, updates, discoveries, or troubleshooting solutions:
+- Add new troubleshooting steps or API configuration issues if discovered
+- Update build/run/test commands if workflow changes
+- Add new architecture patterns or design decisions to relevant sections
+- Update Common Development Workflows if new patterns emerge
+- Document any new configuration variables or environment setup requirements
+- Keep this file as the source of truth for project knowledge and guidance
 
 ## Build & Run Commands
 
