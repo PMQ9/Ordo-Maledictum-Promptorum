@@ -47,42 +47,42 @@ fn default_max_connections() -> u32 {
 /// Parser ensemble configuration
 #[derive(Debug, Clone, Deserialize)]
 pub struct ParsersConfig {
-    /// Enable deterministic parser
-    #[serde(default = "default_true")]
-    pub enable_deterministic: bool,
     /// Enable OpenAI parser
     #[serde(default)]
     pub enable_openai: bool,
-    /// Enable Ollama parser
+    /// Enable DeepSeek parser
     #[serde(default)]
-    pub enable_ollama: bool,
+    pub enable_deepseek: bool,
+    /// Enable Claude parser
+    #[serde(default)]
+    pub enable_claude: bool,
     /// OpenAI API key (optional)
     pub openai_api_key: Option<String>,
     /// OpenAI model name
     #[serde(default = "default_openai_model")]
     pub openai_model: String,
-    /// Ollama endpoint URL
-    #[serde(default = "default_ollama_endpoint")]
-    pub ollama_endpoint: String,
-    /// Ollama model name
-    #[serde(default = "default_ollama_model")]
-    pub ollama_model: String,
-}
-
-fn default_true() -> bool {
-    true
+    /// DeepSeek API key (optional)
+    pub deepseek_api_key: Option<String>,
+    /// DeepSeek model name
+    #[serde(default = "default_deepseek_model")]
+    pub deepseek_model: String,
+    /// Claude API key (optional)
+    pub claude_api_key: Option<String>,
+    /// Claude model name
+    #[serde(default = "default_claude_model")]
+    pub claude_model: String,
 }
 
 fn default_openai_model() -> String {
-    "gpt-4".to_string()
+    "gpt-5-nano".to_string()
 }
 
-fn default_ollama_endpoint() -> String {
-    "http://localhost:11434".to_string()
+fn default_deepseek_model() -> String {
+    "deepseek-chat".to_string()
 }
 
-fn default_ollama_model() -> String {
-    "llama2".to_string()
+fn default_claude_model() -> String {
+    "claude-3-haiku-20240307".to_string() // Valid as of Jan 2025
 }
 
 /// Provider policy configuration

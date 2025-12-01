@@ -3,9 +3,9 @@
 use crate::config::Config;
 use anyhow::Result;
 use intent_comparator::IntentComparator;
-use intent_generator::IntentGenerator;
+use intent_generator::TrustedIntentGenerator;
 use intent_ledger::IntentLedger;
-use intent_parsers::{DeterministicParser, OllamaParser, OpenAIParser, ParserEnsemble};
+use intent_parsers::{ClaudeParser, DeepSeekParser, OpenAIParser, ParserEnsemble};
 use intent_schema::ProviderConfig;
 use intent_voting::VotingModule;
 use malicious_detector::MaliciousDetector;
@@ -58,7 +58,7 @@ pub struct AppState {
     pub comparator: IntentComparator,
 
     /// Intent generator
-    pub generator: IntentGenerator,
+    pub generator: TrustedIntentGenerator,
 
     /// Processing engine
     pub engine: ProcessingEngine,
@@ -91,37 +91,12 @@ impl AppState {
         // Initialize malicious detector
         let detector = MaliciousDetector::new();
 
+        // Build parser configuration
+        let parser_config = build_parser_config(&config);
+
         // Initialize parser ensemble
-        let mut ensemble = ParserEnsemble::new();
-
-        // Add deterministic parser
-        if config.parsers.enable_deterministic {
-            let deterministic = DeterministicParser::new();
-            ensemble.add_parser(Box::new(deterministic));
-            tracing::info!("Added deterministic parser to ensemble");
-        }
-
-        // Add OpenAI parser if enabled
-        if config.parsers.enable_openai {
-            if let Some(api_key) = &config.parsers.openai_api_key {
-                let openai =
-                    OpenAIParser::new(api_key.clone(), config.parsers.openai_model.clone());
-                ensemble.add_parser(Box::new(openai));
-                tracing::info!("Added OpenAI parser to ensemble");
-            } else {
-                tracing::warn!("OpenAI parser enabled but no API key provided");
-            }
-        }
-
-        // Add Ollama parser if enabled
-        if config.parsers.enable_ollama {
-            let ollama = OllamaParser::new(
-                config.parsers.ollama_endpoint.clone(),
-                config.parsers.ollama_model.clone(),
-            );
-            ensemble.add_parser(Box::new(ollama));
-            tracing::info!("Added Ollama parser to ensemble");
-        }
+        let ensemble = ParserEnsemble::new(parser_config);
+        tracing::info!("Parser ensemble initialized with {} parsers", ensemble.parser_count());
 
         // Initialize voting module
         let voting = VotingModule::new();
@@ -130,7 +105,7 @@ impl AppState {
         let comparator = IntentComparator::new();
 
         // Initialize intent generator
-        let generator = IntentGenerator::new();
+        let generator = TrustedIntentGenerator::with_defaults();
 
         // Initialize processing engine
         let engine = ProcessingEngine::new();
@@ -190,53 +165,51 @@ impl AppState {
     }
 }
 
+/// Build ParserConfig from application config
+fn build_parser_config(config: &Config) -> intent_parsers::ParserConfig {
+    use intent_parsers::{ClaudeConfig, DeepSeekConfig, OpenAIConfig, ParserConfig};
+
+    let openai_config = OpenAIConfig {
+        api_key: config.parsers.openai_api_key.clone().unwrap_or_default(),
+        model: config.parsers.openai_model.clone(),
+        temperature: 1.0, // OpenAI requires temperature >= 1.0 for new models
+        timeout_secs: 30,
+        base_url: "https://api.openai.com/v1".to_string(),
+    };
+
+    let deepseek_config = DeepSeekConfig {
+        api_key: config.parsers.deepseek_api_key.clone().unwrap_or_default(),
+        model: config.parsers.deepseek_model.clone(),
+        temperature: 0.0,
+        timeout_secs: 30,
+        base_url: "https://api.deepseek.com/v1".to_string(),
+    };
+
+    let claude_config = ClaudeConfig {
+        api_key: config.parsers.claude_api_key.clone().unwrap_or_default(),
+        model: config.parsers.claude_model.clone(),
+        temperature: 0.0,
+        timeout_secs: 30,
+        base_url: "https://api.anthropic.com/v1".to_string(),
+    };
+
+    ParserConfig {
+        enable_openai: config.parsers.enable_openai,
+        enable_deepseek: config.parsers.enable_deepseek,
+        enable_claude: config.parsers.enable_claude,
+        openai: openai_config,
+        deepseek: deepseek_config,
+        claude: claude_config,
+    }
+}
+
 /// Build ProviderConfig from application config
 fn build_provider_config(config: &Config) -> ProviderConfig {
-    use intent_schema::{Action, Expertise};
-
-    // Parse allowed actions
-    let allowed_actions: Vec<Action> = config
-        .provider
-        .allowed_actions
-        .iter()
-        .filter_map(|s| match s.to_lowercase().as_str() {
-            "find_experts" | "findexperts" => Some(Action::FindExperts),
-            "summarize" => Some(Action::Summarize),
-            "draft_proposal" | "draftproposal" => Some(Action::DraftProposal),
-            _ => {
-                tracing::warn!("Unknown action in config: {}", s);
-                None
-            }
-        })
-        .collect();
-
-    // Parse allowed expertise
-    let allowed_expertise: Vec<Expertise> = config
-        .provider
-        .allowed_expertise
-        .iter()
-        .filter_map(|s| match s.to_lowercase().as_str() {
-            "ml" | "machine_learning" | "machinelearning" => Some(Expertise::MachineLearning),
-            "security" | "cybersecurity" => Some(Expertise::Security),
-            "embedded" => Some(Expertise::Embedded),
-            "cloud" => Some(Expertise::Cloud),
-            "frontend" => Some(Expertise::Frontend),
-            "backend" => Some(Expertise::Backend),
-            "devops" => Some(Expertise::DevOps),
-            "data" | "data_science" => Some(Expertise::DataScience),
-            _ => {
-                tracing::warn!("Unknown expertise in config: {}", s);
-                None
-            }
-        })
-        .collect();
-
     ProviderConfig {
-        allowed_actions,
-        allowed_expertise,
-        max_budget: config.provider.max_budget,
-        max_results: config.provider.max_results,
+        allowed_actions: config.provider.allowed_actions.clone(),
+        allowed_expertise: config.provider.allowed_expertise.clone(),
+        max_budget: config.provider.max_budget.map(|b| b as i64),
+        allowed_domains: vec![],
         require_human_approval: config.provider.require_human_approval,
-        custom_constraints: HashMap::new(),
     }
 }
