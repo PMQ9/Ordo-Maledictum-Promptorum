@@ -391,6 +391,7 @@ pub enum ComparisonResult {
 /// - `allowed_expertise`: Whitelist of permitted expertise areas
 /// - `max_budget`: Optional maximum budget constraint
 /// - `allowed_domains`: Whitelist of permitted topic domains
+/// - `require_human_approval`: Whether to require human approval for all requests
 ///
 /// # Example
 ///
@@ -413,6 +414,7 @@ pub enum ComparisonResult {
 ///         "supply_chain".to_string(),
 ///         "cybersecurity".to_string(),
 ///     ],
+///     require_human_approval: false,
 /// };
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, PartialEq)]
@@ -432,6 +434,10 @@ pub struct ProviderConfig {
     /// List of allowed topic domains
     #[validate(length(min = 0, max = 100))]
     pub allowed_domains: Vec<String>,
+
+    /// Whether to require human approval for all requests
+    #[serde(default)]
+    pub require_human_approval: bool,
 }
 
 /// Record of human approval or rejection.
@@ -839,6 +845,7 @@ mod tests {
             allowed_expertise: vec!["security".to_string(), "ml".to_string()],
             max_budget: Some(50000),
             allowed_domains: vec!["supply_chain".to_string()],
+            require_human_approval: false,
         };
 
         assert!(config.is_action_allowed("find_experts"));

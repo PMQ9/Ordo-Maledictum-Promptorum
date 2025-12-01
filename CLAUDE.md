@@ -140,14 +140,17 @@ cargo test -- --ignored
    - Valid models: `deepseek-chat`, `deepseek-coder`
 
 3. **Claude Model Not Found**
-   - Error: `model: claude-haiku-4-5-20250514` or `model: claude-3-haiku-20250122` (404 Not Found)
-   - Fix: Use valid model names in .env (verified working as of January 2025):
-     - ✅ `CLAUDE_MODEL=claude-3-haiku-20240307` (Claude 3 Haiku - cheapest at $0.25/$1.25 per M tokens)
-     - ✅ `CLAUDE_MODEL=claude-3-5-haiku-20241022` (Claude 3.5 Haiku - newer, similar pricing)
-     - ✅ `CLAUDE_MODEL=claude-3-haiku-latest` (alias to latest Haiku version)
-     - `CLAUDE_MODEL=claude-sonnet-4-5` (for execution engine - more expensive)
-   - **Important**: Model names like `claude-haiku-4-5-20250514` or `claude-3-haiku-20250122` do NOT exist
-   - If .env changes aren't loading, try: `cargo clean -p intent-parsers` then rebuild
+   - Error: `model: claude-3-haiku-latest` (404 Not Found)
+   - Fix: Use valid model names in .env (verified working as of November 2025):
+     - ✅ **RECOMMENDED**: `CLAUDE_MODEL=claude-3-haiku-20240307` (Claude 3 Haiku - **CHEAPEST** at $0.25/$1.25 per M tokens)
+     - ✅ `CLAUDE_MODEL=claude-3-5-haiku-20241022` (Claude 3.5 Haiku - $1/$5 per M tokens, 4x more expensive)
+     - ✅ `CLAUDE_MODEL=claude-haiku-4-5-20251001` (Claude Haiku 4.5 - newest, $1/$5 per M tokens)
+     - ❌ `CLAUDE_MODEL=claude-3-haiku-latest` does NOT exist (common error)
+   - **IMPORTANT**: System environment variables override .env file values!
+     - Check with: `set | grep -i claude` (Windows/Git Bash) or `env | grep -i CLAUDE` (Linux/Mac)
+     - If system env vars are set, they will override your .env file
+     - Fix: Either unset system vars or export correct values: `export CLAUDE_MODEL=claude-3-5-haiku-20241022`
+   - If .env changes still aren't loading, try: `cargo clean -p intent-parsers` then rebuild
 
 4. **Database Migration Issues**
    - Error: `relation "ledger_entries" does not exist`
@@ -157,11 +160,14 @@ cargo test -- --ignored
      ```
    - Or ensure database is migrated before running tests
 
-**Valid Model Names Reference (verified working as of January 2025):**
+**Valid Model Names Reference (verified working as of November 2025):**
 - **OpenAI**: `gpt-4o-mini`, `gpt-5-nano` (requires temperature=1.0)
 - **DeepSeek**: `deepseek-chat`, `deepseek-coder`
-- **Claude**: `claude-3-haiku-20240307` ✅, `claude-3-5-haiku-20241022` ✅, `claude-3-haiku-latest` ✅, `claude-sonnet-4-5`
-  - ❌ `claude-3-haiku-20250122` does NOT exist (invalid model name)
+- **Claude** (ordered by cost, cheapest first):
+  - ✅ `claude-3-haiku-20240307` ← **CHEAPEST** ($0.25/$1.25 per M tokens) - recommended for cost optimization
+  - ✅ `claude-3-5-haiku-20241022` (4x more expensive: $1/$5 per M tokens)
+  - ✅ `claude-haiku-4-5-20251001` (4x more expensive: $1/$5 per M tokens, newest)
+  - ❌ `claude-3-haiku-latest` does NOT exist (common error - returns 404)
 
 ### Linting & Formatting
 ```bash

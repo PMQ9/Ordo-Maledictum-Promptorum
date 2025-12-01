@@ -9,8 +9,7 @@ use intent_ledger::{
     ComparisonResult as LedgerComparisonResult, ElevationEvent, ElevationStatus, LedgerEntry,
     ProcessingOutput, VotingResult as LedgerVotingResult,
 };
-use intent_schema::Intent;
-use intent_voting::ParserResult;
+use intent_schema::{AgreementLevel, Intent, ParsedIntent};
 use malicious_detector::DetectionResult;
 use std::sync::Arc;
 use tracing::{error, info, warn};
@@ -100,24 +99,17 @@ pub async fn process_input(
 
     // Step 2: Parser ensemble
     info!(request_id = %request_id, "Step 2: Running parser ensemble");
-    let parser_results = match state.parser_ensemble.parse_all(&request.user_input).await {
-        Ok(results) => results,
-        Err(e) => {
-            error!(request_id = %request_id, error = %e, "Parser ensemble failed");
-            return Err(AppError::ParserError(e.to_string()));
-        }
-    };
+    let ensemble_result = state
+        .parser_ensemble
+        .parse_all(&request.user_input, &request.user_id, &request.session_id)
+        .await;
 
-    // Convert parser results to voting module format
-    let voting_parser_results: Vec<ParserResult> = parser_results
-        .iter()
-        .map(|pr| ParserResult {
-            parser_name: pr.parser_id.clone(),
-            is_deterministic: pr.parser_id.contains("deterministic"),
-            intent: convert_parsed_intent_to_intent(&pr.intent),
-            parser_confidence: Some(pr.confidence as f64),
-        })
-        .collect();
+    if ensemble_result.success_count == 0 {
+        error!(request_id = %request_id, "All parsers failed");
+        return Err(AppError::ParserError("All parsers failed".to_string()));
+    }
+
+    let parser_results = ensemble_result.results;
 
     pipeline_info.parser_results = Some(
         parser_results
@@ -138,7 +130,7 @@ pub async fn process_input(
 
     // Step 3: Voting module
     info!(request_id = %request_id, "Step 3: Running voting module");
-    let voting_result = match state.voting.vote(voting_parser_results).await {
+    let voting_result = match state.voting.vote(parser_results.clone(), None).await {
         Ok(result) => result,
         Err(e) => {
             error!(request_id = %request_id, error = %e, "Voting failed");
@@ -146,20 +138,23 @@ pub async fn process_input(
         }
     };
 
+    let requires_human_review = voting_result.has_conflict();
+    let average_confidence = voting_result.average_confidence();
+
     pipeline_info.voting_result = Some(VotingResultInfo {
-        confidence_level: format!("{:?}", voting_result.confidence),
-        average_similarity: voting_result.comparison_details.average_similarity,
-        requires_human_review: voting_result.requires_human_review,
-        explanation: voting_result.explanation.clone(),
+        confidence_level: format!("{:?}", voting_result.agreement_level),
+        average_similarity: average_confidence as f64,
+        requires_human_review,
+        explanation: format!("{:?} agreement with {} parsers", voting_result.agreement_level, voting_result.parser_results.len()),
     });
 
     // Store voting result in ledger
-    ledger_entry.voting_result.agreement_level = match voting_result.confidence {
-        intent_voting::ConfidenceLevel::HighConfidence => LedgerAgreementLevel::FullAgreement,
-        intent_voting::ConfidenceLevel::LowConfidence => LedgerAgreementLevel::MinorDiscrepancy,
-        intent_voting::ConfidenceLevel::Conflict => LedgerAgreementLevel::MajorDiscrepancy,
+    ledger_entry.voting_result.agreement_level = match voting_result.agreement_level {
+        AgreementLevel::HighConfidence => LedgerAgreementLevel::FullAgreement,
+        AgreementLevel::LowConfidence => LedgerAgreementLevel::MinorDiscrepancy,
+        AgreementLevel::Conflict => LedgerAgreementLevel::MajorDiscrepancy,
     };
-    ledger_entry.voting_result.confidence = voting_result.comparison_details.average_similarity;
+    ledger_entry.voting_result.confidence = average_confidence as f64;
     ledger_entry.voting_result.canonical_intent =
         Some(serde_json::to_value(&voting_result.canonical_intent).unwrap());
 
@@ -212,12 +207,12 @@ pub async fn process_input(
             .map(|r| r.description.clone())
             .collect(),
         requires_elevation: comparison_result.is_hard_mismatch()
-            || voting_result.requires_human_review,
+            || requires_human_review,
         explanation: comparison_result.message().to_string(),
     };
 
     // Step 5: Check if human approval is needed
-    let requires_approval = voting_result.requires_human_review
+    let requires_approval = requires_human_review
         || comparison_result.is_hard_mismatch()
         || state.provider_config.require_human_approval;
 
@@ -230,8 +225,8 @@ pub async fn process_input(
             user_id: request.user_id.clone(),
             session_id: request.session_id.clone(),
             intent: canonical_intent.clone(),
-            reason: if voting_result.requires_human_review {
-                format!("Parser conflict: {}", voting_result.explanation)
+            reason: if requires_human_review {
+                format!("Parser conflict: {:?} agreement", voting_result.agreement_level)
             } else {
                 format!("Policy mismatch: {}", comparison_result.message())
             },
@@ -310,7 +305,7 @@ pub async fn process_input(
 
     ledger_entry.processing_output = Some(ProcessingOutput {
         success: true,
-        result: Some(processing_result.clone()),
+        result: Some(serde_json::to_value(&processing_result).unwrap()),
         error: None,
         execution_time_ms: execution_start.elapsed().as_millis() as u64,
     });
@@ -329,13 +324,8 @@ pub async fn process_input(
         request_id,
         status: ProcessStatus::Completed,
         trusted_intent: Some(trusted_intent),
-        result: Some(processing_result),
+        result: Some(serde_json::to_value(&processing_result).unwrap()),
         message: "Intent processed successfully".to_string(),
         pipeline_info,
     }))
-}
-
-/// Helper function to convert ParsedIntent to Intent
-fn convert_parsed_intent_to_intent(parsed: &intent_schema::Intent) -> Intent {
-    parsed.clone()
 }

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **API Integration Compilation Errors** (November 2025)
+  - Fixed all API compilation errors in api/src/handlers/process.rs
+    - Updated parser ensemble calls to use correct signatures (parse_all with user_id and session_id)
+    - Fixed voting module integration (vote now takes Vec<ParsedIntent> instead of ParserResult)
+    - Fixed type mismatches in processing result serialization
+  - Fixed api/src/state.rs to use current parser implementations
+    - Replaced deprecated DeterministicParser and OllamaParser with ClaudeParser and DeepSeekParser
+    - Updated to use TrustedIntentGenerator instead of IntentGenerator
+    - Implemented build_parser_config() helper function
+  - Updated api/src/config.rs with DeepSeek and Claude configuration fields
+  - Added require_human_approval field to ProviderConfig in core/schema/src/lib.rs
+- **Claude API Model Configuration** (November 2025)
+  - Updated to use Claude 3 Haiku (claude-3-haiku-20240307) - cheapest at $0.25/$1.25 per M tokens
+  - Documented that claude-3-haiku-latest does not exist (common 404 error)
+  - Added troubleshooting for system environment variables overriding .env file
+  - Updated CLAUDE.md with valid model names and pricing comparison
+  - Verified all three LLM APIs working: OpenAI (gpt-5-nano), DeepSeek (deepseek-chat), Claude (claude-3-haiku-20240307)
+
 ### Added
 - **API Cost Optimization Framework - Complete Implementation** (docs/API_COST_OPTIMIZATION_IMPLEMENTATION.md)
   - **Phase 1: Batch Diagnostic Prompts** - 90% cost reduction ($1,500/month savings)

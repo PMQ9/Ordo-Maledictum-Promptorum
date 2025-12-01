@@ -113,7 +113,7 @@ impl Default for ClaudeConfig {
     fn default() -> Self {
         Self {
             api_key: String::new(),
-            model: "claude-3-haiku-20240307".to_string(),
+            model: "claude-3-haiku-20240307".to_string(), // Valid as of Jan 2025
             temperature: 0.0,
             timeout_secs: 30,
             base_url: "https://api.anthropic.com/v1".to_string(),
