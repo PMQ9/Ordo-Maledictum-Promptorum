@@ -12,7 +12,7 @@ Ordo Maledictum Promptorum - A Rust-based security system designed to prevent pr
 
 **NEVER use emojis** - All documentation and code comments should be free of emoji characters. This keeps the codebase clean and professional.
 
-**NEVER create documentation files unless requested** - Do not proactively create .md, .txt, or other documentation files. Only create documentation files if explicitly requested by the user. This keeps the repository clean and focused. Always prefer editing existing files instead of creating new ones.
+**NEVER create documentation files unless requested** - DO NOT create .md, .txt, or other documentation files. Only create documentation files if explicitly requested by the user. This keeps the repository clean and focused. Always prefer editing existing files instead of creating new ones.
 
 **NEVER commit changes unless explicitly authorized** - Do not make any git commits without explicit permission from the user. Always ask for permission before committing code changes, even if changes are complete and tested.
 
@@ -210,6 +210,38 @@ sqlx migrate revert
 # Check migration status
 sqlx migrate info
 ```
+
+### PostgreSQL Setup
+
+**Quick Start (Automated):**
+```bash
+# Windows
+setup/start_postgres.bat
+
+# Linux/macOS
+bash setup/start_postgres.sh
+```
+
+**Manual Setup:**
+```bash
+docker-compose up -d postgres redis
+psql -U postgres -c "CREATE DATABASE intent_segregation;"
+psql -U postgres -c "CREATE USER intent_user WITH PASSWORD 'intent_pass';"
+psql -U postgres -d intent_segregation -f core/ledger/migrations/20250101000001_init.sql
+```
+
+**Running Tests:**
+```bash
+# Terminal 1: Start API (ensure database is running)
+cargo run --bin intent-api
+
+# Terminal 2: Run tests
+bash run_tests.sh
+```
+
+**Credentials:** `intent_user` / `intent_pass` @ `localhost:5432/intent_segregation`
+
+**Troubleshooting:** `password authentication failed` → Database not running. `database does not exist` → Run migrations above.
 
 ### Documentation
 ```bash

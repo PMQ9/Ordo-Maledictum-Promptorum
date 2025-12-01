@@ -22,7 +22,11 @@
       "Bash(export CLAUDE_COUNCIL_MODEL=claude-3-haiku-20240307)",
       "Bash(export CLAUDE_SACRIFICIAL_MODEL=claude-3-haiku-20240307)",
       "Bash(cargo clean:*)",
-      "Bash(powershell -Command \"Get-Process | Where-Object {$_ProcessName -match ''intent-api''} | Stop-Process -Force\")"
+      "Bash(powershell -Command \"Get-Process | Where-Object {$_ProcessName -match ''intent-api''} | Stop-Process -Force\")",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(bash:*)",
+      "Bash(set)"
     ],
     "deny": [],
     "ask": []
