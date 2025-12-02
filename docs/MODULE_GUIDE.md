@@ -303,7 +303,7 @@ pub struct OllamaConfig {
 pub struct OpenAIConfig {
     pub api_key: String,
     pub base_url: String,       // https://api.openai.com/v1
-    pub model: String,          // gpt-4o-mini
+    pub model: String,          // use gpt-5-nano 
     pub temperature: f64,       // 0.0
     pub timeout_secs: u64,      // 30
 }

@@ -421,7 +421,7 @@ Environment variables are loaded from `.env` (copy `.env.example`):
 - `DATABASE_URL`: PostgreSQL connection
 - `REDIS_HOST`, `REDIS_PORT`: Cache/session storage
 - `ENABLE_OPENAI`, `ENABLE_DEEPSEEK`, `ENABLE_CLAUDE`: Enable/disable LLM parsers
-- `OPENAI_API_KEY`, `OPENAI_MODEL`: OpenAI config (default: gpt-4o-mini)
+- `OPENAI_API_KEY`, `OPENAI_MODEL`: OpenAI config (default: gpt-5-nano)
 - `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`: DeepSeek config (default: deepseek-chat)
 - `CLAUDE_API_KEY`, `CLAUDE_MODEL`: Claude config (default: claude-3-5-sonnet)
 - `ENABLE_HUMAN_APPROVAL`: Enable supervision module
@@ -594,7 +594,7 @@ Integrated benchmarks from November 2025 research:
 
 **Comparative Performance:**
 - **SmoothLLM**: <1% ASR (lower static ASR, but >90% adaptive ASR)
-- **Task Shield**: 2.07% ASR on GPT-4o
+- **Task Shield**: 2.07% ASR on GPT-4o (use gpt-5-nano instead)
 - **CaMeL**: 67% AgentDojo security, 77% utility (reference)
 - **DefensiveTokens**: 0.24% static ASR but 48.8% adaptive ASR
 - **Your Target**: <5% ASR (TIER 1), <2% (TIER 2), with <15% adaptive ASR (k-robust)

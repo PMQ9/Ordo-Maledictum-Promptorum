@@ -87,7 +87,7 @@ let result = parser.parse("Calculate the derivative of x^2 + 3x").await?;
 
 **Trust Level:** 0.8 (Medium-High)
 
-Uses OpenAI's API for intent parsing with models like GPT-4o-mini.
+Uses OpenAI's API for intent parsing with models like gpt-5-nano.
 
 **Features:**
 - High-quality parsing with latest GPT models
