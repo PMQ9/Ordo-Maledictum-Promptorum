@@ -21,41 +21,41 @@ async fn main() -> anyhow::Result<()> {
         ensemble.parser_count()
     );
 
-    // Example 1: Find experts
-    println!("--- Example 1: Find Experts ---");
-    let input1 = "Find top 5 machine learning experts with budget $50,000";
+    // Example 1: Simple arithmetic
+    println!("--- Example 1: Simple Arithmetic ---");
+    let input1 = "What is 2 + 2?";
     let result1 = ensemble
         .parse_all(input1, "demo_user", "demo_session_1")
         .await;
     display_results(&result1);
 
-    // Example 2: Summarize
-    println!("\n--- Example 2: Summarize ---");
-    let input2 = "Summarize the latest research on blockchain security";
+    // Example 2: Algebra
+    println!("\n--- Example 2: Algebra ---");
+    let input2 = "Solve for x: 3x + 5 = 20";
     let result2 = ensemble
         .parse_all(input2, "demo_user", "demo_session_2")
         .await;
     display_results(&result2);
 
-    // Example 3: Draft proposal
-    println!("\n--- Example 3: Draft Proposal ---");
-    let input3 = "Draft a proposal for AI security audit with maximum 10 results";
+    // Example 3: Geometry
+    println!("\n--- Example 3: Geometry ---");
+    let input3 = "Calculate the area of a circle with radius 5";
     let result3 = ensemble
         .parse_all(input3, "demo_user", "demo_session_3")
         .await;
     display_results(&result3);
 
-    // Example 4: Research
-    println!("\n--- Example 4: Research ---");
-    let input4 = "Research quantum computing applications in cybersecurity";
+    // Example 4: Calculus
+    println!("\n--- Example 4: Calculus ---");
+    let input4 = "Find the derivative of f(x) = x^2 + 3x";
     let result4 = ensemble
         .parse_all(input4, "demo_user", "demo_session_4")
         .await;
     display_results(&result4);
 
-    // Example 5: Complex query
-    println!("\n--- Example 5: Complex Query ---");
-    let input5 = "Find embedded systems experts specializing in IoT security, budget: $75,000, top 3 results";
+    // Example 5: Complex calculation
+    println!("\n--- Example 5: Complex Calculation ---");
+    let input5 = "What is the value of the integral of sin(x) from 0 to pi?";
     let result5 = ensemble
         .parse_all(input5, "demo_user", "demo_session_5")
         .await;

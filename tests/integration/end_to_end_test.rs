@@ -15,7 +15,7 @@ use test_helpers::*;
 #[tokio::test]
 async fn test_e2e_clean_input_approved_and_executed() {
     // Arrange
-    let user_input = "Find me security experts for supply chain risk assessment";
+    let user_input = "What is 2 + 2?";
     let user_id = generate_test_user_id();
     let session_id = generate_test_session_id();
     let provider_config = default_test_provider_config();
@@ -28,9 +28,9 @@ async fn test_e2e_clean_input_approved_and_executed() {
 
     // 2. Parse with ensemble (should reach consensus)
     let base_intent = IntentBuilder::new()
-        .action("find_experts")
-        .topic_id("supply_chain_risk_assessment")
-        .expertise(vec!["security"])
+        .action("math_question")
+        .topic_id("addition_2_plus_2")
+        .expertise(vec![])
         .user_id(&user_id)
         .session_id(&session_id)
         .build();
@@ -84,17 +84,16 @@ async fn test_e2e_clean_input_approved_and_executed() {
 #[tokio::test]
 async fn test_e2e_with_budget_constraint() {
     // Arrange
-    let user_input = "Draft proposal for cloud migration with $45000 budget";
+    let user_input = "What is 5 times 9?";
     let user_id = generate_test_user_id();
     let session_id = generate_test_session_id();
     let provider_config = default_test_provider_config();
 
     // Act
     let intent = IntentBuilder::new()
-        .action("draft_proposal")
-        .topic_id("cloud_migration")
-        .expertise(vec!["cloud", "devops"])
-        .budget(45000)
+        .action("math_question")
+        .topic_id("multiplication_5_times_9")
+        .expertise(vec![])
         .user_id(&user_id)
         .session_id(&session_id)
         .build();
@@ -115,8 +114,6 @@ async fn test_e2e_with_budget_constraint() {
 
     // Assert
     assert_approved(&comparison_result);
-    assert_eq!(intent.get_budget(), Some(45000));
-    assert!(provider_config.is_budget_allowed(45000));
 }
 
 // ============================================================================

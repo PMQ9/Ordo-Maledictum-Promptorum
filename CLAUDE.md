@@ -315,9 +315,7 @@ All user inputs follow this sequential validation pipeline:
 7. **The Arbiter of Purpose** (`core/intent_generator/`) - Create signed, trusted intent object
 
 8. **The Oathbound Engine** (`core/processing_engine/`) - Execute via typed functions (NOT free-form LLM):
-   - `find_experts()`
-   - `summarize()`
-   - `draft_proposal()`
+   - `solve_math_question()`
    - All operations logged to ledger
 
 9. **The Chronicle of Allowed Thought** (`core/ledger/`) - Write immutable audit entry with full pipeline data
@@ -344,7 +342,7 @@ The ledger is **immutable by design** - database rules prevent UPDATE and DELETE
 
 **Typed Execution Only:**
 - Processing engine NEVER makes free-form LLM calls
-- All actions are typed function calls: `find_experts(topic, expertise, budget)`
+- All actions are typed function calls: `solve_math_question(question)`
 - This prevents prompt injection in the execution layer
 
 **Defense in Depth:**

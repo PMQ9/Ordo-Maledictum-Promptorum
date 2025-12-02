@@ -30,10 +30,10 @@ async fn scenario_1_high_confidence() {
     let voting = VotingModule::new();
 
     let intent = create_intent(
-        Action::FindExperts,
-        "supply chain risk management",
-        vec![Expertise::Security],
-        Some(20000),
+        Action::MathQuestion,
+        "What is 2 + 2?",
+        vec![],
+        None,
     );
 
     let results = vec![

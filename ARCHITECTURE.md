@@ -353,28 +353,10 @@ The following diagram shows the **actual code implementation** as verified by so
 │ │  │  Action Router (Typed Dispatch)                            │                 │
 │ │  │                                                             │                 │
 │ │  │  match intent.action {                                     │                 │
-│ │  │    Action::FindExperts => {                                │                 │
-│ │  │      find_experts(                                         │                 │
-│ │  │        topic_id: &str,                                     │                 │
-│ │  │        expertise: &[Expertise],                            │                 │
-│ │  │        max_budget: i64,                                    │                 │
-│ │  │        max_results: usize                                  │                 │
-│ │  │      ) -> Vec<Expert>                                      │                 │
-│ │  │    }                                                        │                 │
-│ │  │                                                             │                 │
-│ │  │    Action::Summarize => {                                  │                 │
-│ │  │      summarize(                                            │                 │
-│ │  │        content_refs: &[String],                            │                 │
-│ │  │        max_length: usize                                   │                 │
-│ │  │      ) -> DocumentSummary                                  │                 │
-│ │  │    }                                                        │                 │
-│ │  │                                                             │                 │
-│ │  │    Action::DraftProposal => {                              │                 │
-│ │  │      draft_proposal(                                       │                 │
-│ │  │        topic_id: &str,                                     │                 │
-│ │  │        expertise: &[Expertise],                            │                 │
-│ │  │        constraints: &Constraints                           │                 │
-│ │  │      ) -> Proposal                                         │                 │
+│ │  │    Action::MathQuestion => {                               │                 │
+│ │  │      solve_math_question(                                  │                 │
+│ │  │        question: &str                                      │                 │
+│ │  │      ) -> MathAnswer                                       │                 │
 │ │  │    }                                                        │                 │
 │ │  │                                                             │                 │
 │ │  │    _ => Err(UnsupportedAction)                             │                 │
@@ -388,13 +370,11 @@ The following diagram shows the **actual code implementation** as verified by so
 │ │  • NO string interpolation or raw SQL                                           │
 │ │  • NO calls to LLM with unsanitized prompts                                     │
 │ │                                                                                   │
-│ │  Example - find_experts():                                                       │
-│ │  fn find_experts(topic: &str, expertise: &[Expertise], budget: i64) {           │
-│ │    sqlx::query_as!(Expert,                                                      │
-│ │      "SELECT * FROM experts                                                     │
-│ │       WHERE topic = $1 AND expertise = ANY($2) AND rate <= $3",                 │
-│ │      topic, expertise, budget                                                   │
-│ │    )                                                                             │
+│ │  Example - solve_math_question():                                                │
+│ │  async fn solve_math_question(question: &str) -> Result<String> {               │
+│ │    // Calls Claude API to solve the math question                              │
+│ │    let answer = claude_api_call(question).await?;                               │
+│ │    Ok(answer)                                                                    │
 │ │  }                                                                               │
 │ │                                                                                   │
 │ │  Output: ProcessingResult (structured data)                                     │
@@ -699,8 +679,7 @@ The architecture would be production-ready after addressing the 6 improvements l
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    THE OATHBOUND ENGINE                               │
 │  • Route to Handler          • Execute Typed Functions              │
-│  • find_experts()           • summarize()                           │
-│  • draft_proposal()         • analyze_document()                    │
+│  • solve_math_question()    (Claude API integration)                │
 │  • No Free-form LLM calls   • All Actions Logged                    │
 └────────────┬────────────────────────────────────────────────────────┘
              │

@@ -24,8 +24,8 @@ impl IntentBuilder {
     /// Create a new IntentBuilder with sensible defaults
     pub fn new() -> Self {
         Self {
-            action: "find_experts".to_string(),
-            topic_id: "test_topic".to_string(),
+            action: "math_question".to_string(),
+            topic_id: "What is 2 + 2?".to_string(),
             expertise: vec![],
             constraints: HashMap::new(),
             content_refs: vec![],
@@ -178,16 +178,10 @@ impl ProviderConfigBuilder {
     pub fn new() -> Self {
         Self {
             allowed_actions: vec![
-                "find_experts".to_string(),
-                "summarize".to_string(),
-                "draft_proposal".to_string(),
+                "math_question".to_string(),
             ],
-            allowed_expertise: vec![
-                "security".to_string(),
-                "ml".to_string(),
-                "cloud".to_string(),
-            ],
-            max_budget: Some(50000),
+            allowed_expertise: vec![],
+            max_budget: None,
             allowed_domains: vec![],
         }
     }
@@ -242,33 +236,27 @@ impl Default for ProviderConfigBuilder {
 pub mod fixtures {
     use super::*;
 
-    /// Create a simple test intent for finding experts
-    pub fn simple_find_experts_intent() -> Intent {
+    /// Create a simple test intent for math question
+    pub fn simple_math_question_intent() -> Intent {
         IntentBuilder::new()
-            .action("find_experts")
-            .topic_id("supply_chain_risk")
-            .add_expertise("security")
-            .budget(20000)
+            .action("math_question")
+            .topic_id("What is 2 + 2?")
             .build()
     }
 
-    /// Create a test intent for summarization
-    pub fn simple_summarize_intent() -> Intent {
+    /// Create a test intent for algebra
+    pub fn simple_algebra_intent() -> Intent {
         IntentBuilder::new()
-            .action("summarize")
-            .topic_id("cybersecurity_trends")
-            .add_content_ref("doc_123")
+            .action("math_question")
+            .topic_id("Solve for x: 3x + 5 = 20")
             .build()
     }
 
-    /// Create a test intent for drafting a proposal
-    pub fn simple_draft_proposal_intent() -> Intent {
+    /// Create a test intent for calculus
+    pub fn simple_calculus_intent() -> Intent {
         IntentBuilder::new()
-            .action("draft_proposal")
-            .topic_id("ai_integration")
-            .add_expertise("ml")
-            .add_expertise("security")
-            .budget(100000)
+            .action("math_question")
+            .topic_id("What is the derivative of x^2?")
             .build()
     }
 
@@ -280,9 +268,9 @@ pub mod fixtures {
     /// Create a restrictive provider config
     pub fn restrictive_provider_config() -> ProviderConfig {
         ProviderConfigBuilder::new()
-            .allowed_actions(vec!["find_experts".to_string()])
-            .allowed_expertise(vec!["security".to_string()])
-            .max_budget(Some(10000))
+            .allowed_actions(vec!["math_question".to_string()])
+            .allowed_expertise(vec![])
+            .max_budget(None)
             .build()
     }
 
@@ -290,11 +278,7 @@ pub mod fixtures {
     pub fn permissive_provider_config() -> ProviderConfig {
         ProviderConfigBuilder::new()
             .allowed_actions(vec![
-                "find_experts".to_string(),
-                "summarize".to_string(),
-                "draft_proposal".to_string(),
-                "analyze_document".to_string(),
-                "generate_report".to_string(),
+                "math_question".to_string(),
             ])
             .allowed_expertise(vec![]) // Empty means all allowed
             .max_budget(None)
@@ -303,23 +287,23 @@ pub mod fixtures {
 
     /// Create multiple parsed intents with high agreement
     pub fn high_agreement_parsed_intents() -> Vec<ParsedIntent> {
-        let base_intent = simple_find_experts_intent();
+        let base_intent = simple_math_question_intent();
 
         vec![
             ParsedIntentBuilder::new()
-                .parser_id("deterministic")
-                .intent(base_intent.clone())
-                .confidence(1.0)
-                .build(),
-            ParsedIntentBuilder::new()
-                .parser_id("llm1")
+                .parser_id("openai")
                 .intent(base_intent.clone())
                 .confidence(0.95)
                 .build(),
             ParsedIntentBuilder::new()
-                .parser_id("llm2")
+                .parser_id("deepseek")
                 .intent(base_intent.clone())
                 .confidence(0.92)
+                .build(),
+            ParsedIntentBuilder::new()
+                .parser_id("claude")
+                .intent(base_intent.clone())
+                .confidence(0.96)
                 .build(),
         ]
     }
@@ -328,23 +312,21 @@ pub mod fixtures {
     pub fn conflicting_parsed_intents() -> Vec<ParsedIntent> {
         vec![
             ParsedIntentBuilder::new()
-                .parser_id("deterministic")
+                .parser_id("openai")
                 .intent(
                     IntentBuilder::new()
-                        .action("find_experts")
-                        .topic_id("supply_chain_risk")
-                        .add_expertise("security")
+                        .action("math_question")
+                        .topic_id("What is 2 + 2?")
                         .build()
                 )
-                .confidence(1.0)
+                .confidence(0.95)
                 .build(),
             ParsedIntentBuilder::new()
-                .parser_id("llm1")
+                .parser_id("deepseek")
                 .intent(
                     IntentBuilder::new()
-                        .action("summarize")  // Different action!
-                        .topic_id("cloud_security")
-                        .add_expertise("cloud")
+                        .action("math_question")
+                        .topic_id("What is 5 + 5?")  // Different question!
                         .build()
                 )
                 .confidence(0.85)
@@ -412,27 +394,20 @@ pub mod generators {
         use rand::SeedableRng;
         let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
 
-        let actions = ["find_experts", "summarize", "draft_proposal", "analyze_document"];
-        let topics = ["supply_chain", "cybersecurity", "ml_ops", "cloud_migration"];
-        let expertise_options = ["security", "ml", "cloud", "embedded", "frontend"];
+        let questions = [
+            "What is 2 + 2?",
+            "Solve for x: 3x + 5 = 20",
+            "What is the derivative of x^2?",
+            "Calculate the integral of 2x",
+            "What is the square root of 144?",
+            "Simplify: (x + 2)(x - 2)",
+        ];
 
-        let action = actions[rng.gen_range(0..actions.len())].to_string();
-        let topic = topics[rng.gen_range(0..topics.len())].to_string();
-        let expertise_count = rng.gen_range(0..3);
-        let expertise: Vec<String> = (0..expertise_count)
-            .map(|_| expertise_options[rng.gen_range(0..expertise_options.len())].to_string())
-            .collect();
-
-        let mut constraints = HashMap::new();
-        if rng.gen_bool(0.5) {
-            constraints.insert("max_budget".to_string(), json!(rng.gen_range(10000..100000)));
-        }
+        let topic = questions[rng.gen_range(0..questions.len())].to_string();
 
         IntentBuilder::new()
-            .action(action)
+            .action("math_question".to_string())
             .topic_id(topic)
-            .expertise(expertise)
-            .constraints(constraints)
             .build()
     }
 
@@ -451,16 +426,13 @@ mod tests {
     #[test]
     fn test_intent_builder() {
         let intent = IntentBuilder::new()
-            .action("find_experts")
-            .topic_id("test_topic")
-            .add_expertise("security")
-            .budget(50000)
+            .action("math_question")
+            .topic_id("What is 10 - 3?")
             .build();
 
-        assert_eq!(intent.action, "find_experts");
-        assert_eq!(intent.topic_id, "test_topic");
-        assert_eq!(intent.expertise.len(), 1);
-        assert_eq!(intent.get_budget(), Some(50000));
+        assert_eq!(intent.action, "math_question");
+        assert_eq!(intent.topic_id, "What is 10 - 3?");
+        assert_eq!(intent.expertise.len(), 0);
     }
 
     #[test]
@@ -477,23 +449,18 @@ mod tests {
     #[test]
     fn test_provider_config_builder() {
         let config = ProviderConfigBuilder::new()
-            .add_allowed_action("custom_action")
-            .max_budget(Some(100000))
             .build();
 
-        assert!(config.is_action_allowed("find_experts"));
-        assert!(config.is_action_allowed("custom_action"));
-        assert!(config.is_budget_allowed(50000));
-        assert!(!config.is_budget_allowed(200000));
+        assert!(config.is_action_allowed("math_question"));
     }
 
     #[test]
     fn test_fixtures() {
-        let intent = fixtures::simple_find_experts_intent();
-        assert_eq!(intent.action, "find_experts");
+        let intent = fixtures::simple_math_question_intent();
+        assert_eq!(intent.action, "math_question");
 
         let config = fixtures::default_provider_config();
-        assert!(config.is_action_allowed("find_experts"));
+        assert!(config.is_action_allowed("math_question"));
 
         let parsed_intents = fixtures::high_agreement_parsed_intents();
         assert_eq!(parsed_intents.len(), 3);

@@ -292,9 +292,9 @@ mod tests {
 
     fn create_test_config() -> ProviderConfig {
         ProviderConfig {
-            allowed_actions: vec!["find_experts".to_string(), "summarize".to_string()],
-            allowed_expertise: vec!["security".to_string(), "ml".to_string()],
-            max_budget: Some(50000),
+            allowed_actions: vec!["math_question".to_string()],
+            allowed_expertise: vec![],
+            max_budget: None,
             allowed_domains: vec![],
         }
     }
@@ -313,14 +313,11 @@ mod tests {
         let comparator = IntentComparator::new();
         let config = create_test_config();
 
-        let mut constraints = HashMap::new();
-        constraints.insert("max_budget".to_string(), json!(20000));
-
         let intent = Intent {
-            action: "find_experts".to_string(),
-            topic_id: "supply_chain_risk".to_string(),
-            expertise: vec!["security".to_string()],
-            constraints,
+            action: "math_question".to_string(),
+            topic_id: "What is 2 + 2?".to_string(),
+            expertise: vec![],
+            constraints: HashMap::new(),
             content_refs: vec![],
             metadata: create_test_intent_metadata(),
         };
@@ -337,8 +334,8 @@ mod tests {
         let config = create_test_config();
 
         let intent = Intent {
-            action: "draft_proposal".to_string(),
-            topic_id: "test".to_string(),
+            action: "delete_database".to_string(),
+            topic_id: "What is 2 + 2?".to_string(),
             expertise: vec![],
             constraints: HashMap::new(),
             content_refs: vec![],
@@ -354,89 +351,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_expertise_not_allowed() {
+    async fn test_expertise_allowed_empty() {
         let comparator = IntentComparator::new();
         let config = create_test_config();
 
         let intent = Intent {
-            action: "find_experts".to_string(),
-            topic_id: "test".to_string(),
-            expertise: vec!["security".to_string(), "frontend".to_string()],
-            constraints: HashMap::new(),
-            content_refs: vec![],
-            metadata: create_test_intent_metadata(),
-        };
-
-        let result = comparator.compare(&intent, &config).await.unwrap();
-
-        assert!(result.is_hard_mismatch());
-        let reasons = result.reasons();
-        assert!(reasons
-            .iter()
-            .any(|r| r.category == MismatchCategory::ExpertiseNotAllowed));
-    }
-
-    #[tokio::test]
-    async fn test_budget_exceeded() {
-        let comparator = IntentComparator::new();
-        let config = create_test_config();
-
-        let mut constraints = HashMap::new();
-        constraints.insert("max_budget".to_string(), json!(100000));
-
-        let intent = Intent {
-            action: "find_experts".to_string(),
-            topic_id: "test".to_string(),
+            action: "math_question".to_string(),
+            topic_id: "Solve for x: 3x + 5 = 20".to_string(),
             expertise: vec![],
-            constraints,
-            content_refs: vec![],
-            metadata: create_test_intent_metadata(),
-        };
-
-        let result = comparator.compare(&intent, &config).await.unwrap();
-
-        assert!(result.is_hard_mismatch());
-        let reasons = result.reasons();
-        assert!(reasons
-            .iter()
-            .any(|r| r.category == MismatchCategory::BudgetExceeded));
-    }
-
-    #[tokio::test]
-    async fn test_multiple_violations() {
-        let comparator = IntentComparator::new();
-        let config = create_test_config();
-
-        let mut constraints = HashMap::new();
-        constraints.insert("max_budget".to_string(), json!(200000));
-
-        let intent = Intent {
-            action: "draft_proposal".to_string(),
-            topic_id: "test".to_string(),
-            expertise: vec!["frontend".to_string()],
-            constraints,
-            content_refs: vec![],
-            metadata: create_test_intent_metadata(),
-        };
-
-        let result = comparator.compare(&intent, &config).await.unwrap();
-
-        assert!(result.is_hard_mismatch());
-        let reasons = result.reasons();
-        // Should have multiple violations (action, expertise, budget)
-        assert!(reasons.len() >= 2);
-    }
-
-    #[tokio::test]
-    async fn test_empty_expertise_allowed() {
-        let comparator = IntentComparator::new();
-        let mut config = create_test_config();
-        config.allowed_expertise = vec![]; // Empty means no restriction
-
-        let intent = Intent {
-            action: "find_experts".to_string(),
-            topic_id: "test".to_string(),
-            expertise: vec!["frontend".to_string(), "backend".to_string()],
             constraints: HashMap::new(),
             content_refs: vec![],
             metadata: create_test_intent_metadata(),
@@ -446,6 +368,75 @@ mod tests {
 
         // Should be approved since empty expertise list means no restriction
         assert!(result.is_approved());
+    }
+
+    #[tokio::test]
+    async fn test_no_budget_constraint() {
+        let comparator = IntentComparator::new();
+        let config = create_test_config();
+
+        let intent = Intent {
+            action: "math_question".to_string(),
+            topic_id: "What is the derivative of x^2?".to_string(),
+            expertise: vec![],
+            constraints: HashMap::new(),
+            content_refs: vec![],
+            metadata: create_test_intent_metadata(),
+        };
+
+        let result = comparator.compare(&intent, &config).await.unwrap();
+
+        // Should be approved with no budget constraints
+        assert!(result.is_approved());
+    }
+
+    #[tokio::test]
+    async fn test_forbidden_action() {
+        let comparator = IntentComparator::new();
+        let config = create_test_config();
+
+        let intent = Intent {
+            action: "execute_code".to_string(),
+            topic_id: "rm -rf /".to_string(),
+            expertise: vec![],
+            constraints: HashMap::new(),
+            content_refs: vec![],
+            metadata: create_test_intent_metadata(),
+        };
+
+        let result = comparator.compare(&intent, &config).await.unwrap();
+
+        assert!(result.is_hard_mismatch());
+        let reasons = result.reasons();
+        assert_eq!(reasons.len(), 1);
+        assert_eq!(reasons[0].category, MismatchCategory::ActionNotAllowed);
+    }
+
+    #[tokio::test]
+    async fn test_math_question_variants() {
+        let comparator = IntentComparator::new();
+        let config = create_test_config();
+
+        let questions = vec![
+            "What is 2 + 2?",
+            "Solve for x: 3x + 5 = 20",
+            "What is the derivative of x^2?",
+            "Calculate the integral of 2x",
+        ];
+
+        for question in questions {
+            let intent = Intent {
+                action: "math_question".to_string(),
+                topic_id: question.to_string(),
+                expertise: vec![],
+                constraints: HashMap::new(),
+                content_refs: vec![],
+                metadata: create_test_intent_metadata(),
+            };
+
+            let result = comparator.compare(&intent, &config).await.unwrap();
+            assert!(result.is_approved(), "Failed for question: {}", question);
+        }
     }
 
     #[tokio::test]
