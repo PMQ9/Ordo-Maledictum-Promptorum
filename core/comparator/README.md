@@ -25,20 +25,19 @@ use serde_json::json;
 async fn main() {
     // Create a provider configuration
     let config = ProviderConfig {
-        allowed_actions: vec!["find_experts".to_string(), "summarize".to_string()],
-        allowed_expertise: vec!["security".to_string(), "ml".to_string()],
-        max_budget: Some(50000),
+        allowed_actions: vec!["math_question".to_string()],
+        allowed_expertise: vec![],
+        max_budget: None,
         allowed_domains: vec![],
     };
 
     // Create an intent
-    let mut constraints = HashMap::new();
-    constraints.insert("max_budget".to_string(), json!(20000));
+    let constraints = HashMap::new();
 
     let intent = Intent {
-        action: "find_experts".to_string(),
-        topic_id: "supply_chain_risk".to_string(),
-        expertise: vec!["security".to_string()],
+        action: "math_question".to_string(),
+        topic_id: "algebra".to_string(),
+        expertise: vec![],
         constraints,
         content_refs: vec![],
         metadata: IntentMetadata {
@@ -80,21 +79,17 @@ async fn main() {
 **Provider Config:**
 ```json
 {
-  "allowed_actions": ["find_experts", "summarize"],
-  "allowed_expertise": ["security", "ml"],
-  "max_budget": 50000
+  "allowed_actions": ["math_question"],
+  "allowed_expertise": []
 }
 ```
 
 **User Intent:**
 ```json
 {
-  "action": "find_experts",
-  "topic_id": "supply_chain_risk",
-  "expertise": ["security"],
-  "constraints": {
-    "max_budget": 20000
-  }
+  "action": "math_question",
+  "topic_id": "algebra",
+  "expertise": []
 }
 ```
 
@@ -110,27 +105,26 @@ async fn main() {
 **Provider Config:**
 ```json
 {
-  "allowed_actions": ["find_experts", "summarize"],
-  "allowed_expertise": ["security", "ml"],
-  "max_budget": 50000
+  "allowed_actions": ["math_question"],
+  "allowed_expertise": []
 }
 ```
 
 **User Intent:**
 ```json
 {
-  "action": "draft_proposal",
-  "topic_id": "new_project"
+  "action": "find_experts",
+  "topic_id": "security"
 }
 ```
 
 **Result:**
 ```
 ✗ HardMismatch - Intent denied - 1 violation(s) found
-  - Action 'draft_proposal' is not in the allowed actions list. Allowed actions: ["find_experts", "summarize"]
+  - Action 'find_experts' is not in the allowed actions list. Allowed actions: ["math_question"]
 ```
 
-**Reason:** The action "draft_proposal" is not in the allowed actions list.
+**Reason:** The action "find_experts" is not in the allowed actions list.
 
 ---
 
@@ -139,58 +133,53 @@ async fn main() {
 **Provider Config:**
 ```json
 {
-  "allowed_actions": ["find_experts"],
-  "allowed_expertise": ["security", "ml"],
-  "max_budget": 50000
+  "allowed_actions": ["math_question"],
+  "allowed_expertise": ["algebra"]
 }
 ```
 
 **User Intent:**
 ```json
 {
-  "action": "find_experts",
-  "expertise": ["security", "frontend"]
+  "action": "math_question",
+  "expertise": ["algebra", "calculus"]
 }
 ```
 
 **Result:**
 ```
 ✗ HardMismatch - Intent denied - 1 violation(s) found
-  - Requested expertise areas not allowed: ["frontend"]. Allowed expertise: ["security", "ml"]
+  - Requested expertise areas not allowed: ["calculus"]. Allowed expertise: ["algebra"]
 ```
 
-**Reason:** The expertise "frontend" is not in the allowed expertise list.
+**Reason:** The expertise "calculus" is not in the allowed expertise list.
 
 ---
 
-### Example 4: Budget Exceeded (Hard Mismatch)
+### Example 4: Multiple Math Topics (Approved)
 
 **Provider Config:**
 ```json
 {
-  "allowed_actions": ["find_experts"],
-  "allowed_expertise": ["security"],
-  "max_budget": 50000
+  "allowed_actions": ["math_question"],
+  "allowed_expertise": []
 }
 ```
 
 **User Intent:**
 ```json
 {
-  "action": "find_experts",
-  "constraints": {
-    "max_budget": 100000
-  }
+  "action": "math_question",
+  "topic_id": "arithmetic"
 }
 ```
 
 **Result:**
 ```
-✗ HardMismatch - Intent denied - 1 violation(s) found
-  - Requested budget $100000 exceeds maximum allowed budget $50000
+✓ Approved - Intent approved - all checks passed
 ```
 
-**Reason:** The requested budget of $100,000 exceeds the maximum allowed budget of $50,000.
+**Reason:** Math question with arithmetic topic is allowed.
 
 ---
 
@@ -199,35 +188,29 @@ async fn main() {
 **Provider Config:**
 ```json
 {
-  "allowed_actions": ["find_experts", "summarize"],
-  "allowed_expertise": ["security", "ml"],
-  "max_budget": 50000
+  "allowed_actions": ["math_question"],
+  "allowed_expertise": ["algebra"]
 }
 ```
 
 **User Intent:**
 ```json
 {
-  "action": "draft_proposal",
-  "expertise": ["frontend"],
-  "constraints": {
-    "max_budget": 200000
-  }
+  "action": "find_experts",
+  "expertise": ["calculus"]
 }
 ```
 
 **Result:**
 ```
-✗ HardMismatch - Intent denied - 3 violation(s) found
-  - Action 'draft_proposal' is not in the allowed actions list. Allowed actions: ["find_experts", "summarize"]
-  - Requested expertise areas not allowed: ["frontend"]. Allowed expertise: ["security", "ml"]
-  - Requested budget $200000 exceeds maximum allowed budget $50000
+✗ HardMismatch - Intent denied - 2 violation(s) found
+  - Action 'find_experts' is not in the allowed actions list. Allowed actions: ["math_question"]
+  - Requested expertise areas not allowed: ["calculus"]. Allowed expertise: ["algebra"]
 ```
 
 **Reason:** Multiple violations:
 1. Action not allowed
-2. Expertise not allowed  
-3. Budget exceeded
+2. Expertise not allowed
 
 ---
 
@@ -236,17 +219,16 @@ async fn main() {
 **Provider Config:**
 ```json
 {
-  "allowed_actions": ["find_experts"],
-  "allowed_expertise": [],
-  "max_budget": 50000
+  "allowed_actions": ["math_question"],
+  "allowed_expertise": []
 }
 ```
 
 **User Intent:**
 ```json
 {
-  "action": "find_experts",
-  "expertise": ["frontend", "backend", "anything"]
+  "action": "math_question",
+  "expertise": []
 }
 ```
 
@@ -285,7 +267,6 @@ Each result includes:
 
 - **ActionNotAllowed**: Requested action is not in allowed actions list
 - **ExpertiseNotAllowed**: Requested expertise areas are not permitted
-- **BudgetExceeded**: Budget constraint exceeds maximum allowed
 - **CustomConstraintViolation**: Custom constraint validation failed
 
 ## Severity Levels

@@ -593,12 +593,12 @@ mod tests {
         let entry = LedgerEntry::new(
             "session123".to_string(),
             "user456".to_string(),
-            "Find me experts in ML".to_string(),
+            "What is 2 + 2?".to_string(),
         );
 
         assert_eq!(entry.session_id, "session123");
         assert_eq!(entry.user_id, "user456");
-        assert_eq!(entry.user_input, "Find me experts in ML");
+        assert_eq!(entry.user_input, "What is 2 + 2?");
         assert!(!entry.user_input_hash.is_empty());
     }
 
@@ -615,7 +615,7 @@ mod tests {
     //     let entry = LedgerEntry::new(
     //         "session123".to_string(),
     //         "user456".to_string(),
-    //         "Find experts in ML".to_string(),
+    //         "What is 5 * 7?".to_string(),
     //     );
     //     let id = ledger.append(entry).await.unwrap();
     //     let retrieved = ledger.query_by_id(id).await.unwrap();

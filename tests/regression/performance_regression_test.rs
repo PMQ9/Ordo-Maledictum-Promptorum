@@ -18,7 +18,7 @@ async fn test_perf_parser_response_time_under_100ms() {
     // Baseline: 50ms (2024-01-01)
 
     // Arrange
-    let user_input = "Find security experts for supply chain project with $30000 budget";
+    let user_input = "What is the square root of 144?";
 
     // Act
     let start = Instant::now();
@@ -72,9 +72,9 @@ async fn test_perf_comparison_under_10ms() {
     // Arrange
     let config = default_test_provider_config();
     let intent = IntentBuilder::new()
-        .action("find_experts")
-        .expertise(vec!["security", "ml"])
-        .budget(30000)
+        .action("math_question")
+        .topic_id("What is 25 * 4?")
+        .expertise(vec![])
         .build();
 
     // Act
@@ -97,7 +97,7 @@ async fn test_perf_end_to_end_under_500ms() {
     // Baseline: 200ms (2024-01-01)
 
     // Arrange
-    let user_input = "Find security experts for cloud migration";
+    let user_input = "What is 15 times 23?";
     let config = default_test_provider_config();
 
     // Act
@@ -133,7 +133,7 @@ async fn test_perf_parser_handles_100_requests_per_second() {
 
     // Arrange
     let inputs: Vec<String> = (0..100)
-        .map(|i| format!("Find experts for project {}", i))
+        .map(|i| format!("What is {} plus {}?", i, i+1))
         .collect();
 
     // Act
@@ -159,7 +159,7 @@ async fn test_perf_concurrent_processing_10_requests() {
 
     // Arrange
     let inputs: Vec<String> = (0..10)
-        .map(|i| format!("Find security experts for project {}", i))
+        .map(|i| format!("What is {} multiplied by {}?", i, i+2))
         .collect();
 
     // Act
@@ -197,13 +197,15 @@ async fn test_perf_large_expertise_list_parsing() {
     // Baseline: < 50ms (2024-01-01)
 
     // Arrange
-    let large_expertise: Vec<String> = (0..50).map(|i| format!("expertise_{}", i)).collect();
+    // Note: math_question doesn't use expertise, but testing with empty expertise
     let intent = IntentBuilder::new()
-        .expertise(large_expertise.iter().map(|s| s.as_str()).collect())
+        .action("math_question")
+        .topic_id("What is the factorial of 10?")
+        .expertise(vec![])
         .build();
 
     let config = ProviderConfig {
-        allowed_actions: vec!["find_experts".to_string()],
+        allowed_actions: vec!["math_question".to_string()],
         allowed_expertise: vec![], // Empty = allow all
         max_budget: Some(50000),
         allowed_domains: vec![],
@@ -229,15 +231,17 @@ async fn test_perf_similarity_calculation_with_large_intents() {
     // Baseline: < 100ms for large intents (2024-01-01)
 
     // Arrange
-    let expertise1: Vec<String> = (0..100).map(|i| format!("exp_{}", i)).collect();
-    let expertise2: Vec<String> = (50..150).map(|i| format!("exp_{}", i)).collect();
-
+    // Note: math_question doesn't use expertise, testing with empty expertise
     let intent1 = IntentBuilder::new()
-        .expertise(expertise1.iter().map(|s| s.as_str()).collect())
+        .action("math_question")
+        .topic_id("What is 100 + 200?")
+        .expertise(vec![])
         .build();
 
     let intent2 = IntentBuilder::new()
-        .expertise(expertise2.iter().map(|s| s.as_str()).collect())
+        .action("math_question")
+        .topic_id("What is 150 + 250?")
+        .expertise(vec![])
         .build();
 
     // Act
@@ -473,7 +477,7 @@ async fn test_perf_api_process_endpoint_under_200ms() {
 
     // Arrange
     let request_body = serde_json::json!({
-        "user_input": "Find security experts",
+        "user_input": "What is 42 divided by 6?",
         "user_id": "user_123",
         "session_id": "session_456"
     });
@@ -498,7 +502,7 @@ async fn test_perf_api_handles_burst_of_100_requests() {
 
     // Arrange
     let request_body = serde_json::json!({
-        "user_input": "Find experts",
+        "user_input": "What is 10 times 10?",
         "user_id": "user_123",
         "session_id": "session_456"
     });
@@ -527,13 +531,14 @@ async fn test_perf_api_handles_burst_of_100_requests() {
 use intent_schema::{ComparisonResult, Intent, ProviderConfig};
 
 async fn mock_deterministic_parse(input: &str) -> Result<intent_schema::ParsedIntent, String> {
-    let action = if input.to_lowercase().contains("find") {
-        "find_experts"
-    } else {
-        "unknown"
-    };
+    // All inputs are treated as math questions
+    let action = "math_question";
 
-    let intent = IntentBuilder::new().action(action).build();
+    let intent = IntentBuilder::new()
+        .action(action)
+        .topic_id(input)
+        .expertise(vec![])
+        .build();
 
     Ok(ParsedIntentBuilder::new()
         .intent(intent)

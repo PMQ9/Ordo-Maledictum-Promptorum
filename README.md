@@ -21,7 +21,7 @@ The architecture uses:
 - An immutable audit ledger (The Chronicle of Allowed Thought)
 - Optional human approval (The Overseer-Prime) for elevated-risk actions
 
-This design is especially suitable for narrow, well-defined AI applications, such as B2B consulting automation, customer support tools, or workflow agents.
+This design is especially suitable for narrow, well-defined AI applications, such as math tutoring services, educational tools, or specialized calculators.
 
 ## 2. System Architecture
 ```
@@ -123,9 +123,9 @@ Compares:
 The Edict of the High Magister Example:
 
 {
-  "allowed_actions": ["find_experts", "summarize", "draft_proposal"],
-  "allowed_expertise": ["ml", "embedded", "security"],
-  "max_budget": 50000
+  "allowed_actions": ["math_question"],
+  "allowed_expertise": [],
+  "max_budget": null
 }
 ```
 
@@ -154,13 +154,11 @@ Guarantees:
 Example output:
 ```
 {
-  "action": "find_experts",
-  "topic_id": "supply_chain_risk",
-  "expertise": ["security"],
-  "constraints": {
-    "max_budget": 20000
-  },
-  "content_refs": ["doc_1321"]
+  "action": "math_question",
+  "topic_id": "What is 2 + 2?",
+  "expertise": [],
+  "constraints": {},
+  "content_refs": []
 }
 ```
 
@@ -176,7 +174,7 @@ Implementation Requirements:
 
 Example callable:
 ```
-get_experts({ topic_id, expertise, max_budget })
+solve_math_question({ question })
 ```
 
 ### 3.8 The Chronicle of Allowed Thought (Intent Ledger)

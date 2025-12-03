@@ -93,7 +93,7 @@ Server starts at `http://localhost:3000`
 curl -X POST http://localhost:3000/api/process \
   -H "Content-Type: application/json" \
   -d '{
-    "user_input": "Find security experts for supply chain project, budget $20000",
+    "user_input": "What is 2 + 2?",
     "user_id": "user_123",
     "session_id": "session_456"
   }'
@@ -125,8 +125,8 @@ enable_openai = false    # Requires API key
 enable_ollama = false    # Requires local Ollama
 
 [provider]
-allowed_actions = ["find_experts", "summarize", "draft_proposal"]
-allowed_expertise = ["ml", "security", "embedded", "cloud"]
+allowed_actions = ["math_question"]
+allowed_expertise = []
 max_budget = 50000
 require_human_approval = false
 ```

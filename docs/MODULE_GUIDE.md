@@ -50,25 +50,11 @@ pub struct Intent {
 
 // Actions (enum)
 pub enum Action {
-    FindExperts,
-    Summarize,
-    DraftProposal,
-    AnalyzeDocument,
-    GenerateReport,
-    SearchKnowledge,
+    MathQuestion,
 }
 
-// Expertise areas (enum)
-pub enum Expertise {
-    MachineLearning,
-    Embedded,
-    Security,
-    Cloud,
-    Backend,
-    Frontend,
-    DataScience,
-    DevOps,
-}
+// Expertise areas (empty for math tutoring)
+// No expertise filtering needed for math questions
 
 // Constraints
 pub struct Constraint {
@@ -108,13 +94,10 @@ use serde_json::json;
 
 // Create an intent
 let intent = Intent {
-    action: Action::FindExperts,
-    topic: Some("supply chain security".to_string()),
-    expertise: vec![Expertise::Security, Expertise::Cloud],
-    constraints: json!({
-        "max_budget": 50000,
-        "max_results": 10
-    }),
+    action: Action::MathQuestion,
+    topic: Some("algebra".to_string()),
+    expertise: vec![],  // Empty for math questions
+    constraints: json!({}),
     content_refs: vec![],
 };
 
@@ -206,7 +189,7 @@ use malicious_detector::MaliciousDetector;
 let detector = MaliciousDetector::new();
 
 // Safe input
-let result = detector.check("Find ML experts for my project").await?;
+let result = detector.check("What is the derivative of x squared?").await?;
 assert!(!result.blocked);
 
 // Malicious input
@@ -320,7 +303,7 @@ pub struct OllamaConfig {
 pub struct OpenAIConfig {
     pub api_key: String,
     pub base_url: String,       // https://api.openai.com/v1
-    pub model: String,          // gpt-4o-mini
+    pub model: String,          // use gpt-5-nano 
     pub temperature: f64,       // 0.0
     pub timeout_secs: u64,      // 30
 }
@@ -344,7 +327,7 @@ use intent_parsers::{DeterministicParser, OllamaParser, OpenAIParser};
 
 // Deterministic parser (rule-based, no LLM)
 let det_parser = DeterministicParser::new();
-let result = det_parser.parse("Find ML experts with $50k budget").await?;
+let result = det_parser.parse("What is 5 times 7?").await?;
 
 // Ollama parser (local LLM)
 let ollama_config = OllamaConfig {
@@ -354,7 +337,7 @@ let ollama_config = OllamaConfig {
     timeout_secs: 30,
 };
 let ollama_parser = OllamaParser::new(ollama_config);
-let result = ollama_parser.parse("Find ML experts with $50k budget").await?;
+let result = ollama_parser.parse("What is 5 times 7?").await?;
 
 // OpenAI parser (cloud LLM)
 let openai_config = OpenAIConfig {
@@ -365,7 +348,7 @@ let openai_config = OpenAIConfig {
     base_url: "https://api.openai.com/v1".to_string(),
 };
 let openai_parser = OpenAIParser::new(openai_config);
-let result = openai_parser.parse("Find ML experts with $50k budget").await?;
+let result = openai_parser.parse("What is 5 times 7?").await?;
 ```
 
 #### Using Ensemble
@@ -538,7 +521,7 @@ Validates the canonical intent against provider-defined policies and constraints
 use intent_comparator::{IntentComparator, ComparisonResult, ProviderConfig};
 
 // Create comparator
-let config = ProviderConfig::load("b2b_consulting")?;
+let config = ProviderConfig::load("math_tutoring")?;
 let comparator = IntentComparator::new(config);
 
 // Compare intent against policy
@@ -572,13 +555,13 @@ Provider configuration (`config/provider_config.json`):
 
 ```json
 {
-  "allowed_actions": ["find_experts", "summarize", "draft_proposal"],
-  "allowed_expertise": ["ml", "security", "cloud"],
+  "allowed_actions": ["math_question"],
+  "allowed_expertise": [],
   "max_budget": 100000,
   "max_results": 50,
-  "require_human_approval": true,
+  "require_human_approval": false,
   "custom_constraints": {
-    "allowed_topics": ["supply_chain", "cybersecurity"],
+    "allowed_topics": ["algebra", "calculus", "geometry", "arithmetic"],
     "forbidden_actions": ["delete", "modify_records"]
   }
 }
@@ -592,7 +575,7 @@ use intent_comparator::{IntentComparator, ProviderConfig};
 // Load provider config
 let provider_config = ProviderConfig::load_from_file(
     "config/provider_config.json",
-    "b2b_consulting"
+    "math_tutoring"
 )?;
 
 let comparator = IntentComparator::new(provider_config);
@@ -602,14 +585,14 @@ let result = comparator.compare(&intent).await?;
 
 match result.result {
     ComparisonDecision::Approved => {
-        println!("✓ Intent approved");
+        println!("Intent approved");
     }
     ComparisonDecision::SoftMismatch => {
-        println!("⚠ Soft mismatch: {}", result.message);
+        println!("Soft mismatch: {}", result.message);
         println!("Violations: {:?}", result.violations);
     }
     ComparisonDecision::HardMismatch => {
-        println!("✗ Hard mismatch - blocked");
+        println!("Hard mismatch - blocked");
         println!("Violations: {:?}", result.violations);
     }
 }
@@ -710,7 +693,7 @@ Executes validated, trusted intents via typed function calls (not free-form LLM 
 ### Responsibilities
 
 - Route intents to appropriate handlers
-- Execute typed functions (find_experts, summarize, etc.)
+- Execute typed functions (solve_math_question, etc.)
 - Return structured results
 - Log execution to ledger
 - Handle execution errors
@@ -817,7 +800,7 @@ let supervision = SupervisionModule::new(db_pool, notifications);
 // Create approval request
 let approval = supervision.create_approval(
     &intent,
-    "Parser conflict detected",
+    "Parser conflict on math question interpretation",
     &parser_diff
 ).await?;
 
@@ -869,7 +852,7 @@ let supervision = SupervisionModule::new(db_pool, notifications);
 // Create approval
 let approval = supervision.create_approval(
     &intent,
-    "Parser conflict: deterministic vs LLM disagree on action",
+    "Parser conflict: parsers disagree on math question interpretation",
     &parser_diff
 ).await?;
 
@@ -919,7 +902,7 @@ notifications.send(
     json!({
         "approval_id": approval.id,
         "user_id": "user_123",
-        "reason": "Parser conflict"
+        "reason": "Parser conflict on math question"
     })
 ).await?;
 ```
@@ -987,7 +970,7 @@ notifications.send(
     "Approval Required",
     json!({
         "approval_id": "123e4567-e89b-12d3-a456-426614174000",
-        "reason": "Parser conflict detected"
+        "reason": "Parser conflict on math question interpretation"
     })
 ).await?;
 
@@ -1033,7 +1016,7 @@ let ledger = Ledger::new(db_pool);
 let entry = LedgerEntry {
     session_id: "session_123".to_string(),
     user_id: "user_456".to_string(),
-    user_input: "Find ML experts".to_string(),
+    user_input: "What is 15 divided by 3?".to_string(),
     malicious_blocked: false,
     voting_result: serde_json::to_value(&voting_result)?,
     comparison_result: serde_json::to_value(&comparison_result)?,

@@ -61,20 +61,14 @@ impl NotificationBatcher {
     pub async fn queue_alert(&self, alert: Alert) {
         let mut queue = self.queue.lock().await;
         queue.push_back(BatchedNotification::Alert(alert));
-        tracing::debug!(
-            "Alert queued for batching. Queue size: {}",
-            queue.len()
-        );
+        tracing::debug!("Alert queued for batching. Queue size: {}", queue.len());
     }
 
     /// Queue an email for batching
     pub async fn queue_email(&self, email: EmailMessage) {
         let mut queue = self.queue.lock().await;
         queue.push_back(BatchedNotification::Email(email));
-        tracing::debug!(
-            "Email queued for batching. Queue size: {}",
-            queue.len()
-        );
+        tracing::debug!("Email queued for batching. Queue size: {}", queue.len());
     }
 
     /// Drain all pending notifications from the queue
@@ -190,14 +184,8 @@ pub fn combine_approvals_to_teams(approvals: &[ApprovalRequest]) -> Option<Teams
     }
 
     Some(TeamsMessage {
-        title: format!(
-            "Batched Approvals: {} requests pending",
-            approvals.len()
-        ),
-        text: format!(
-            "{} approval request(s) require attention",
-            approvals.len()
-        ),
+        title: format!("Batched Approvals: {} requests pending", approvals.len()),
+        text: format!("{} approval request(s) require attention", approvals.len()),
         theme_color: Some("ff6b6b".to_string()),
         sections: Some(vec![crate::types::TeamsSection {
             activity_title: Some("Pending Approvals".to_string()),

@@ -245,18 +245,15 @@ This document summarizes the comprehensive unit test coverage added to the Inten
 
 #### Deterministic Parser Coverage:
 - **Action Extraction** (9 test cases)
-  - "find_experts" variations
-  - "summarize" keyword detection
-  - "draft_proposal" matching
-  - "research" and "query" actions
+  - "math_question" variations
+  - "solve", "calculate", "compute" keyword detection
+  - Math operation matching (addition, subtraction, multiplication, division)
+  - "what is", "find", "solve for" patterns
   - Unknown action handling
 
-- **Expertise Extraction** (5 expertise types)
-  - Machine Learning (ML, AI, artificial intelligence)
-  - Embedded systems (IoT, firmware, microcontroller)
-  - Security (cybersecurity, infosec, penetration testing)
-  - Cloud (AWS, Azure, GCP, Kubernetes)
-  - Blockchain (crypto, web3, ethereum)
+- **Expertise Extraction** (0 types - math tutoring uses no expertise)
+  - All expertise arrays should be empty: []
+  - No expertise filtering needed for math questions
 
 - **Budget Parsing** (5 formats)
   - Plain numbers: `$50000`
@@ -297,10 +294,9 @@ Created comprehensive test utilities:
 Fluent API for creating test Intents:
 ```rust
 let intent = IntentBuilder::new()
-    .action("find_experts")
-    .topic_id("supply_chain")
-    .add_expertise("security")
-    .budget(50000)
+    .action("math_question")
+    .topic_id("algebra")
+    .expertise(vec![])  // Empty for math questions
     .build();
 ```
 
@@ -312,9 +308,7 @@ Configurable provider policies for comparator tests
 
 #### Fixtures Module
 Pre-configured test data:
-- `simple_find_experts_intent()`
-- `simple_summarize_intent()`
-- `simple_draft_proposal_intent()`
+- `simple_math_question_intent()`
 - `default_provider_config()`
 - `restrictive_provider_config()`
 - `permissive_provider_config()`

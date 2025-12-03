@@ -498,8 +498,8 @@ Create a seed script `scripts/seed_database.sql`:
 -- Seed provider policies
 INSERT INTO provider_policies (provider_name, config, active)
 VALUES (
-    'b2b_consulting',
-    '{"allowed_actions": ["find_experts", "summarize"], "max_budget": 100000}'::jsonb,
+    'math_tutoring',
+    '{"allowed_actions": ["math_question"], "max_budget": 100000}'::jsonb,
     true
 );
 
@@ -859,7 +859,7 @@ export let options = {
 
 export default function() {
   let payload = JSON.stringify({
-    user_input: 'Find ML experts with $50k budget',
+    user_input: 'What is 15 multiplied by 8?',
     user_id: 'test_user',
     session_id: 'test_session'
   });

@@ -74,7 +74,10 @@ impl LexicanumDiagnostica {
             Ok(batch_response) => {
                 for batch_result in batch_response.results {
                     // Find the matching diagnostic definition
-                    if let Some(diagnostic) = diagnostics.iter().find(|d| d.id == batch_result.diagnostic_id) {
+                    if let Some(diagnostic) = diagnostics
+                        .iter()
+                        .find(|d| d.id == batch_result.diagnostic_id)
+                    {
                         let reported_risk = batch_result.risk_score;
 
                         // Check if result matches expected behavior

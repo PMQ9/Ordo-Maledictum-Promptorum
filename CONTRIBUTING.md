@@ -238,8 +238,8 @@ We follow the official Rust style guide with some additions:
 /// use intent_parsers::DeterministicParser;
 ///
 /// let parser = DeterministicParser::new();
-/// let result = parser.parse("Find ML experts with $50k budget").await?;
-/// assert_eq!(result.intent.action, Action::FindExperts);
+/// let result = parser.parse("What is 2 + 2?").await?;
+/// assert_eq!(result.intent.action, "math_question");
 /// ```
 ///
 /// # Errors
@@ -465,7 +465,7 @@ mod tests {
     #[test]
     fn test_parse_budget() {
         let parser = DeterministicParser::new();
-        let input = "Find experts with budget $50000";
+        let input = "Solve 5 + 3 with budget $50000";
 
         // Test implementation
         let result = parser.extract_budget(input);
@@ -475,11 +475,11 @@ mod tests {
     #[tokio::test]
     async fn test_async_parsing() {
         let parser = DeterministicParser::new();
-        let result = parser.parse("test input").await;
+        let result = parser.parse("What is 10 + 5?").await;
 
         assert!(result.is_ok());
         let intent = result.unwrap();
-        assert_eq!(intent.action, Action::FindExperts);
+        assert_eq!(intent.action, "math_question");
     }
 }
 ```
@@ -500,7 +500,7 @@ async fn test_full_pipeline() {
         .unwrap();
 
     // Test the full pipeline
-    let input = "Find security experts";
+    let input = "What is the square root of 144?";
     let result = process_input(input, &pool).await;
 
     assert!(result.is_ok());

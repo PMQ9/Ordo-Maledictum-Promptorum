@@ -82,6 +82,38 @@ Ordo Maledictum Promptorum - A Rust-based security system designed to prevent pr
 - Document any new configuration variables or environment setup requirements
 - Keep this file as the source of truth for project knowledge and guidance
 
+## Recent Major Refactoring (December 2025)
+
+**Intent System Simplification - Math Tutoring Platform**
+
+Completed a major refactoring to simplify the intent system from a B2B consulting platform to a math tutoring platform:
+
+- **Removed Actions**: FindExperts, Summarize, DraftProposal, AnalyzeDocument, GenerateReport, SearchKnowledge
+- **Single Action**: MathQuestion (only action in the system now)
+- **Domain Change**: From B2B consulting (finding experts, summarizing documents, drafting proposals) to math tutoring (solving math problems)
+- **Simplified Schema**:
+  - Removed expertise areas (not needed for math questions)
+  - Removed budget constraints (not applicable to math tutoring)
+  - Topics now represent math domains: algebra, calculus, geometry, arithmetic
+
+**Files Updated (15+ files across 3 commits)**:
+- All documentation (README.md, API_DOCUMENTATION.md, MODULE_GUIDE.md, etc.)
+- All code examples (comparator, processing engine, schema, etc.)
+- Test files and fixtures
+- Configuration examples
+
+**Key Changes**:
+- Provider config: `allowed_actions = ["math_question"]`, `allowed_expertise = []`
+- Processing engine now only has `solve_math_question()` function
+- All examples demonstrate math problems: "What is 2 + 2?", "Solve for x: 3x + 5 = 20", etc.
+- Results structure changed from Expert/Document/Proposal types to MathResult with answer, explanation, and step-by-step solutions
+
+**Verification**: Build passes with `cargo build --all` (only warnings, no errors)
+
+**Commits**:
+- 48bac7b: Removed FindExperts/Summarize/DraftProposal references from CONTRIBUTING.md, core/ledger, core/parsers, core/processing_engine, docs/SECURITY.md
+- 77963e5: Complete removal of B2B consulting references from api/, core/comparator/, core/schema/, docs/MODULE_GUIDE.md
+
 ## Build & Run Commands
 
 ### Building
@@ -99,6 +131,31 @@ cargo build -p intent-parsers
 # Clean build artifacts
 cargo clean
 ```
+
+**Windows Build Lock Issue - AUTOMATED SOLUTION:**
+
+On Windows, rebuilding can fail with "Access is denied" errors when previous processes hold locks on executables. Use the automated rebuild scripts:
+
+```bash
+# Windows (PowerShell or CMD)
+setup\rebuild_api.bat          # Debug build
+setup\rebuild_api.bat --release # Release build
+
+# Git Bash / Linux / macOS
+bash setup/rebuild_api.sh          # Debug build
+bash setup/rebuild_api.sh --release # Release build
+```
+
+These scripts automatically:
+1. Kill any running `cargo` or `intent-api` processes
+2. Wait for Windows to release file locks (2 second delay)
+3. Run the build command
+4. Report success or failure
+
+**Recommended Development Workflow:**
+- Use `cargo watch -x run` for hot-reload development (avoids repeated builds)
+- Use `setup/rebuild_api.bat` when you need a fresh build
+- The Python E2E test script ([tests/e2e/run_e2e_test.py](tests/e2e/run_e2e_test.py)) now has automatic cleanup handlers (atexit + signal handlers)
 
 ### Running
 ```bash
@@ -315,9 +372,7 @@ All user inputs follow this sequential validation pipeline:
 7. **The Arbiter of Purpose** (`core/intent_generator/`) - Create signed, trusted intent object
 
 8. **The Oathbound Engine** (`core/processing_engine/`) - Execute via typed functions (NOT free-form LLM):
-   - `find_experts()`
-   - `summarize()`
-   - `draft_proposal()`
+   - `solve_math_question()`
    - All operations logged to ledger
 
 9. **The Chronicle of Allowed Thought** (`core/ledger/`) - Write immutable audit entry with full pipeline data
@@ -344,7 +399,7 @@ The ledger is **immutable by design** - database rules prevent UPDATE and DELETE
 
 **Typed Execution Only:**
 - Processing engine NEVER makes free-form LLM calls
-- All actions are typed function calls: `find_experts(topic, expertise, budget)`
+- All actions are typed function calls: `solve_math_question(question)`
 - This prevents prompt injection in the execution layer
 
 **Defense in Depth:**
@@ -385,19 +440,74 @@ All modules depend on `intent-schema` for shared types (`Intent`, `Action`, `Exp
 
 ## Configuration
 
-Environment variables are loaded from `.env` (copy `.env.example`):
+**Single Source of Truth Approach** (December 2025):
 
-**Critical settings:**
-- `DATABASE_URL`: PostgreSQL connection
-- `REDIS_HOST`, `REDIS_PORT`: Cache/session storage
-- `ENABLE_OPENAI`, `ENABLE_DEEPSEEK`, `ENABLE_CLAUDE`: Enable/disable LLM parsers
-- `OPENAI_API_KEY`, `OPENAI_MODEL`: OpenAI config (default: gpt-4o-mini)
-- `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`: DeepSeek config (default: deepseek-chat)
-- `CLAUDE_API_KEY`, `CLAUDE_MODEL`: Claude config (default: claude-3-5-sonnet)
-- `ENABLE_HUMAN_APPROVAL`: Enable supervision module
-- `SMTP_*` / `SLACK_*`: Notification configuration
+The project uses a clear separation between configuration and secrets:
 
-Provider policies are stored in `config/default.toml` and can be loaded at runtime.
+1. **`config/default.toml`** - All application configuration (ports, models, policies)
+   - Checked into git with sensible defaults
+   - No secrets or API keys
+
+2. **`.env`** - API keys and secrets ONLY
+   - NOT checked into git (in `.gitignore`)
+   - Copy from `.env.example` and fill in your keys
+
+3. **`config/local.toml`** (optional) - Local developer overrides
+   - NOT checked into git
+   - Overrides settings from `default.toml`
+
+4. **Environment Variables** (optional) - Runtime overrides
+   - Use `APP__` prefix: `APP__SERVER__PORT=8080`
+   - Use `__` to separate nested keys: `APP__PARSERS__ENABLE_OPENAI=true`
+
+**Setup Instructions:**
+```bash
+# 1. Create .env file with your API keys (it's in .gitignore, won't be committed)
+cat > .env << 'EOF'
+# LLM API Keys (get from provider dashboards)
+CLAUDE_API_KEY=sk-ant-your-key-here
+OPENAI_API_KEY=sk-your-key-here
+DEEPSEEK_API_KEY=sk-your-key-here
+
+# Database credentials
+DATABASE_PASSWORD=intent_pass
+EOF
+
+# 2. config/default.toml already has good defaults, just review it
+# 3. (Optional) Create config/local.toml for personal overrides
+
+# 4. Start the database
+docker-compose up -d postgres redis
+
+# 5. Run the API
+cargo run --bin intent-api
+```
+
+### Key Settings in config/default.toml
+
+**Server Configuration:**
+- `server.port`: HTTP server port (default: 8080)
+- `server.frontend_path`: Path to frontend static files
+- `server.request_timeout_secs`: Request timeout
+
+**Database Configuration:**
+- `database.url`: PostgreSQL connection string
+- `database.max_connections`: Connection pool size
+
+**Parser Configuration:**
+- `parsers.enable_openai`, `enable_deepseek`, `enable_claude`: Enable/disable LLM parsers
+- `parsers.openai_model`, `deepseek_model`, `claude_model`: Model names
+- API keys are loaded from `.env` file (CLAUDE_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY)
+
+**Provider Policy:**
+- `provider.allowed_actions`: List of permitted actions (e.g., ["math_question"])
+- `provider.allowed_expertise`: List of expertise areas (empty = all allowed)
+- `provider.max_results`: Maximum results per request
+- `provider.require_human_approval`: Force human approval for all requests
+
+**Notifications:**
+- `notifications.enable_email`: Enable email notifications
+- SMTP credentials loaded from `.env`
 
 ## Important Constraints
 
@@ -564,7 +674,7 @@ Integrated benchmarks from November 2025 research:
 
 **Comparative Performance:**
 - **SmoothLLM**: <1% ASR (lower static ASR, but >90% adaptive ASR)
-- **Task Shield**: 2.07% ASR on GPT-4o
+- **Task Shield**: 2.07% ASR on GPT-4o (use gpt-5-nano instead)
 - **CaMeL**: 67% AgentDojo security, 77% utility (reference)
 - **DefensiveTokens**: 0.24% static ASR but 48.8% adaptive ASR
 - **Your Target**: <5% ASR (TIER 1), <2% (TIER 2), with <15% adaptive ASR (k-robust)

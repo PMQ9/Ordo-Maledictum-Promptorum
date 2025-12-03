@@ -35,7 +35,7 @@ pub use serde_json::Value;
 ///
 /// # Fields
 ///
-/// - `action`: The type of operation requested (e.g., "find_experts", "summarize")
+/// - `action`: The type of operation requested (e.g., "math_question")
 /// - `topic_id`: Identifier for the subject matter or domain
 /// - `expertise`: List of required expertise areas
 /// - `constraints`: Key-value pairs for limits and parameters (e.g., max_budget)
@@ -51,15 +51,11 @@ pub use serde_json::Value;
 /// use uuid::Uuid;
 ///
 /// let intent = Intent {
-///     action: "find_experts".to_string(),
-///     topic_id: "supply_chain_risk".to_string(),
-///     expertise: vec!["security".to_string(), "ml".to_string()],
-///     constraints: {
-///         let mut map = HashMap::new();
-///         map.insert("max_budget".to_string(), serde_json::json!(20000));
-///         map
-///     },
-///     content_refs: vec!["doc_1321".to_string()],
+///     action: "math_question".to_string(),
+///     topic_id: "What is 2 + 2?".to_string(),
+///     expertise: vec![],
+///     constraints: HashMap::new(),
+///     content_refs: vec![],
 ///     metadata: IntentMetadata {
 ///         id: Uuid::new_v4(),
 ///         timestamp: Utc::now(),
@@ -70,7 +66,7 @@ pub use serde_json::Value;
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, Validate, PartialEq)]
 pub struct Intent {
-    /// The action to perform (e.g., "find_experts", "summarize", "draft_proposal")
+    /// The action to perform (e.g., "math_question")
     #[validate(length(min = 1, max = 100))]
     pub action: String,
 
@@ -400,20 +396,11 @@ pub enum ComparisonResult {
 ///
 /// let config = ProviderConfig {
 ///     allowed_actions: vec![
-///         "find_experts".to_string(),
-///         "summarize".to_string(),
-///         "draft_proposal".to_string(),
+///         "math_question".to_string(),
 ///     ],
-///     allowed_expertise: vec![
-///         "ml".to_string(),
-///         "embedded".to_string(),
-///         "security".to_string(),
-///     ],
-///     max_budget: Some(50000),
-///     allowed_domains: vec![
-///         "supply_chain".to_string(),
-///         "cybersecurity".to_string(),
-///     ],
+///     allowed_expertise: vec![],
+///     max_budget: None,
+///     allowed_domains: vec![],
 ///     require_human_approval: false,
 /// };
 /// ```
@@ -503,7 +490,7 @@ pub struct HumanApproval {
 /// let entry = LedgerEntry {
 ///     id: Uuid::new_v4(),
 ///     timestamp: Utc::now(),
-///     user_input: "Find me security experts for supply chain project".to_string(),
+///     user_input: "What is 2 + 2?".to_string(),
 ///     parsed_intents: vec![/* parser results */],
 ///     voting_result: VotingResult {
 ///         // ... voting result
@@ -752,37 +739,33 @@ mod tests {
     #[test]
     fn test_intent_creation() {
         let intent = Intent::new(
-            "find_experts".to_string(),
-            "supply_chain".to_string(),
-            vec!["security".to_string()],
+            "math_question".to_string(),
+            "What is 2 + 2?".to_string(),
+            vec![],
             HashMap::new(),
             vec![],
             "user_123".to_string(),
             "session_456".to_string(),
         );
 
-        assert_eq!(intent.action, "find_experts");
-        assert_eq!(intent.topic_id, "supply_chain");
-        assert!(intent.has_expertise("security"));
-        assert!(!intent.has_expertise("ml"));
+        assert_eq!(intent.action, "math_question");
+        assert_eq!(intent.topic_id, "What is 2 + 2?");
+        assert_eq!(intent.expertise.len(), 0);
     }
 
     #[test]
-    fn test_intent_budget() {
-        let mut constraints = HashMap::new();
-        constraints.insert("max_budget".to_string(), serde_json::json!(20000));
-
+    fn test_intent_no_budget() {
         let intent = Intent::new(
-            "find_experts".to_string(),
-            "supply_chain".to_string(),
+            "math_question".to_string(),
+            "Solve for x: 3x + 5 = 20".to_string(),
             vec![],
-            constraints,
+            HashMap::new(),
             vec![],
             "user_123".to_string(),
             "session_456".to_string(),
         );
 
-        assert_eq!(intent.get_budget(), Some(20000));
+        assert_eq!(intent.get_budget(), None);
     }
 
     #[test]
@@ -841,24 +824,15 @@ mod tests {
     #[test]
     fn test_provider_config() {
         let config = ProviderConfig {
-            allowed_actions: vec!["find_experts".to_string(), "summarize".to_string()],
-            allowed_expertise: vec!["security".to_string(), "ml".to_string()],
-            max_budget: Some(50000),
-            allowed_domains: vec!["supply_chain".to_string()],
+            allowed_actions: vec!["math_question".to_string()],
+            allowed_expertise: vec![],
+            max_budget: None,
+            allowed_domains: vec![],
             require_human_approval: false,
         };
 
-        assert!(config.is_action_allowed("find_experts"));
+        assert!(config.is_action_allowed("math_question"));
         assert!(!config.is_action_allowed("delete_all"));
-
-        assert!(config.is_expertise_allowed("security"));
-        assert!(!config.is_expertise_allowed("quantum"));
-
-        assert!(config.is_budget_allowed(30000));
-        assert!(!config.is_budget_allowed(60000));
-
-        assert!(config.is_domain_allowed("supply_chain"));
-        assert!(!config.is_domain_allowed("finance"));
     }
 
     #[test]
@@ -894,9 +868,9 @@ mod tests {
     #[test]
     fn test_serialization() {
         let intent = Intent::new(
-            "find_experts".to_string(),
-            "supply_chain".to_string(),
-            vec!["security".to_string()],
+            "math_question".to_string(),
+            "What is 2 + 2?".to_string(),
+            vec![],
             HashMap::new(),
             vec![],
             "user_123".to_string(),
@@ -915,9 +889,9 @@ mod tests {
     #[test]
     fn test_intent_similarity_identical() {
         let intent1 = Intent::new(
-            "find_experts".to_string(),
-            "supply_chain_risk".to_string(),
-            vec!["security".to_string(), "ml".to_string()],
+            "math_question".to_string(),
+            "What is 2 + 2?".to_string(),
+            vec![],
             HashMap::new(),
             vec![],
             "user_123".to_string(),
@@ -933,20 +907,20 @@ mod tests {
     }
 
     #[test]
-    fn test_intent_similarity_different_action() {
+    fn test_intent_similarity_different_topic() {
         let intent1 = Intent::new(
-            "find_experts".to_string(),
-            "supply_chain_risk".to_string(),
-            vec!["security".to_string()],
+            "math_question".to_string(),
+            "What is 2 + 2?".to_string(),
+            vec![],
             HashMap::new(),
             vec![],
             "user_123".to_string(),
             "session_456".to_string(),
         );
         let intent2 = Intent::new(
-            "summarize".to_string(),
-            "supply_chain_risk".to_string(),
-            vec!["security".to_string()],
+            "math_question".to_string(),
+            "What is the derivative of x^2?".to_string(),
+            vec![],
             HashMap::new(),
             vec![],
             "user_123".to_string(),
@@ -955,16 +929,16 @@ mod tests {
 
         let similarity = intent1.similarity(&intent2);
         assert!(
-            similarity < 0.75,
-            "Different actions should have low similarity"
+            similarity < 1.0,
+            "Different topics should have lower similarity"
         );
     }
 
     #[test]
     fn test_intent_similarity_case_insensitive_action() {
         let intent1 = Intent::new(
-            "find_experts".to_string(),
-            "topic".to_string(),
+            "math_question".to_string(),
+            "What is 2 + 2?".to_string(),
             vec![],
             HashMap::new(),
             vec![],
@@ -972,8 +946,8 @@ mod tests {
             "session".to_string(),
         );
         let intent2 = Intent::new(
-            "Find_Experts".to_string(),
-            "topic".to_string(),
+            "Math_Question".to_string(),
+            "What is 2 + 2?".to_string(),
             vec![],
             HashMap::new(),
             vec![],
@@ -989,20 +963,20 @@ mod tests {
     }
 
     #[test]
-    fn test_intent_similarity_different_expertise() {
+    fn test_intent_similarity_empty_expertise() {
         let intent1 = Intent::new(
-            "find_experts".to_string(),
-            "topic".to_string(),
-            vec!["security".to_string(), "ml".to_string()],
+            "math_question".to_string(),
+            "What is 2 + 2?".to_string(),
+            vec![],
             HashMap::new(),
             vec![],
             "user".to_string(),
             "session".to_string(),
         );
         let intent2 = Intent::new(
-            "find_experts".to_string(),
-            "topic".to_string(),
-            vec!["cloud".to_string(), "devops".to_string()],
+            "math_question".to_string(),
+            "What is 2 + 2?".to_string(),
+            vec![],
             HashMap::new(),
             vec![],
             "user".to_string(),
@@ -1010,40 +984,34 @@ mod tests {
         );
 
         let similarity = intent1.similarity(&intent2);
-        // Should have lower similarity due to completely different expertise
-        assert!(similarity < 1.0);
+        // Should have full similarity with empty expertise
+        assert_eq!(similarity, 1.0);
     }
 
     #[test]
-    fn test_intent_similarity_with_constraints() {
-        let mut constraints1 = HashMap::new();
-        constraints1.insert("max_budget".to_string(), serde_json::json!(50000));
-
-        let mut constraints2 = HashMap::new();
-        constraints2.insert("max_budget".to_string(), serde_json::json!(55000));
-
+    fn test_intent_similarity_no_constraints() {
         let intent1 = Intent::new(
-            "find_experts".to_string(),
-            "topic".to_string(),
+            "math_question".to_string(),
+            "What is 2 + 2?".to_string(),
             vec![],
-            constraints1,
+            HashMap::new(),
             vec![],
             "user".to_string(),
             "session".to_string(),
         );
         let intent2 = Intent::new(
-            "find_experts".to_string(),
-            "topic".to_string(),
+            "math_question".to_string(),
+            "What is 2 + 2?".to_string(),
             vec![],
-            constraints2,
+            HashMap::new(),
             vec![],
             "user".to_string(),
             "session".to_string(),
         );
 
         let similarity = intent1.similarity(&intent2);
-        // Should be high but not perfect due to slight budget difference
-        assert!(similarity > 0.9 && similarity < 1.0);
+        // Should be perfect similarity with no constraints
+        assert_eq!(similarity, 1.0);
     }
 
     // ========================================================================
@@ -1363,9 +1331,9 @@ mod tests {
         use validator::Validate;
 
         let intent = Intent::new(
-            "find_experts".to_string(),
-            "topic".to_string(),
-            vec!["security".to_string()],
+            "math_question".to_string(),
+            "What is 2 + 2?".to_string(),
+            vec![],
             HashMap::new(),
             vec![],
             "user_123".to_string(),

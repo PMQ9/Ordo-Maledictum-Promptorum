@@ -2,7 +2,7 @@ use crate::cache_helper;
 use crate::config::DeepSeekConfig;
 use crate::types::{IntentParser, ParserError, ParserResult};
 use chrono::Utc;
-use intent_schema::{Intent, IntentMetadata, ParsedIntent, cache::cache_keys};
+use intent_schema::{cache::cache_keys, Intent, IntentMetadata, ParsedIntent};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -86,25 +86,31 @@ impl DeepSeekParser {
     fn build_system_prompt(&self) -> String {
         r#"You are an intent extraction system. Parse user input and extract structured intent information.
 
+The system only handles math questions. Extract the math question from the user input.
+
 Return ONLY a valid JSON object with this exact structure:
 {
-  "action": "find_experts|summarize|draft_proposal|research|query|other",
-  "topic_id": "brief_snake_case_topic_id",
-  "expertise": ["ml", "embedded", "security", "cloud", "blockchain"],
-  "constraints": {
-    "max_budget": 0,
-    "max_results": 10
-  },
+  "action": "math_question",
+  "topic_id": "the_math_question_or_problem",
+  "expertise": [],
+  "constraints": {},
   "confidence": 0.0-1.0
 }
 
 Rules:
-- action must be a snake_case string like: find_experts, summarize, draft_proposal, research, query
-- topic_id should be a brief snake_case identifier for the topic
-- expertise should include areas like: ml, embedded, security, cloud, blockchain
-- constraints is optional, include only if found in input
+- action must always be "math_question"
+- topic_id should contain the actual math question or problem
+- expertise should be an empty array
+- constraints should be an empty object
 - confidence should reflect how certain you are about the parsing (0.0 to 1.0)
-- Return ONLY the JSON, no other text"#
+- Return ONLY the JSON, no other text
+
+Example inputs and outputs:
+User: "What is 2 + 2?"
+Output: {"action": "math_question", "topic_id": "What is 2 + 2?", "expertise": [], "constraints": {}, "confidence": 0.95}
+
+User: "Solve for x: 3x + 5 = 20"
+Output: {"action": "math_question", "topic_id": "Solve for x: 3x + 5 = 20", "expertise": [], "constraints": {}, "confidence": 0.98}"#
             .to_string()
     }
 

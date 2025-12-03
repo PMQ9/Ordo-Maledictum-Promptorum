@@ -12,27 +12,18 @@ use crate::ParsedIntent;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum Action {
-    FindExperts,
-    Summarize,
-    DraftProposal,
-    AnalyzeDocument,
-    GenerateReport,
-    SearchKnowledge,
-    LlmChat,
+    MathQuestion,
 }
 
-/// Expertise areas enum
+/// Expertise areas enum (not used for math tutoring platform)
+/// Kept for type compatibility but should always be an empty vector
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum Expertise {
-    MachineLearning,
-    Embedded,
-    Security,
-    Cloud,
-    Backend,
-    Frontend,
-    DevOps,
-    DataScience,
+    // No variants - expertise areas not applicable to math tutoring
+    // This enum is kept for backward compatibility but Vec<Expertise> should always be empty
+    #[serde(skip)]
+    _Unused,
 }
 
 /// Constraints for intent execution
@@ -125,50 +116,6 @@ pub enum SchemaError {
     SerializationError(#[from] serde_json::Error),
 }
 
-/// Expert result from find_experts action
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Expert {
-    pub id: String,
-    pub name: String,
-    pub expertise: Vec<String>,
-    pub availability: bool,
-    pub hourly_rate: u64,
-    pub confidence_score: f64,
-    pub bio: Option<String>,
-    pub years_experience: Option<u32>,
-}
-
-/// Document summary result
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DocumentSummary {
-    pub document_id: String,
-    pub title: String,
-    pub summary: String,
-    pub key_points: Vec<String>,
-    pub word_count: usize,
-    pub confidence: f64,
-    pub generated_at: DateTime<Utc>,
-}
-
-/// Proposal section
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProposalSection {
-    pub heading: String,
-    pub content: String,
-    pub order: u32,
-}
-
-/// Complete proposal result
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Proposal {
-    pub id: String,
-    pub title: String,
-    pub sections: Vec<ProposalSection>,
-    pub created_at: DateTime<Utc>,
-    pub estimated_budget: Option<u64>,
-    pub timeline_weeks: Option<u32>,
-}
-
 /// Processing metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProcessingMetadata {
@@ -259,22 +206,20 @@ mod tests {
 
     #[test]
     fn test_action_serialization() {
-        let action = Action::FindExperts;
+        let action = Action::MathQuestion;
         let json = serde_json::to_string(&action).unwrap();
-        assert_eq!(json, "\"find_experts\"");
+        assert_eq!(json, "\"math_question\"");
 
         let deserialized: Action = serde_json::from_str(&json).unwrap();
-        assert_eq!(deserialized, Action::FindExperts);
+        assert_eq!(deserialized, Action::MathQuestion);
     }
 
     #[test]
-    fn test_expertise_serialization() {
-        let expertise = Expertise::MachineLearning;
-        let json = serde_json::to_string(&expertise).unwrap();
-        assert_eq!(json, "\"machine_learning\"");
-
-        let deserialized: Expertise = serde_json::from_str(&json).unwrap();
-        assert_eq!(deserialized, Expertise::MachineLearning);
+    fn test_expertise_empty() {
+        // Expertise is not used for math tutoring platform
+        // Vec<Expertise> should always be empty
+        let expertise_list: Vec<Expertise> = vec![];
+        assert!(expertise_list.is_empty());
     }
 
     #[test]
@@ -308,11 +253,11 @@ mod tests {
         let intent = TrustedIntent {
             id: uuid::Uuid::new_v4(),
             timestamp: chrono::Utc::now(),
-            action: Action::FindExperts,
-            topic_id: "supply_chain_risk".to_string(),
-            expertise: vec![Expertise::Security],
+            action: Action::MathQuestion,
+            topic_id: "algebra_equation".to_string(),
+            expertise: vec![],
             constraints: Constraints::default(),
-            content_refs: vec!["doc_123".to_string()],
+            content_refs: vec![],
             signature: None,
             content_hash: "abc123".to_string(),
             user_id: "user_123".to_string(),
@@ -327,7 +272,7 @@ mod tests {
         let intent = TrustedIntent {
             id: uuid::Uuid::new_v4(),
             timestamp: chrono::Utc::now(),
-            action: Action::FindExperts,
+            action: Action::MathQuestion,
             topic_id: "this has spaces in it".to_string(), // Invalid!
             expertise: vec![],
             constraints: Constraints::default(),
@@ -346,7 +291,7 @@ mod tests {
         let intent = TrustedIntent {
             id: uuid::Uuid::new_v4(),
             timestamp: chrono::Utc::now(),
-            action: Action::FindExperts,
+            action: Action::MathQuestion,
             topic_id: "valid_topic".to_string(),
             expertise: vec![],
             constraints: Constraints::default(),
@@ -374,14 +319,7 @@ mod tests {
 
     #[test]
     fn test_all_actions() {
-        let actions = vec![
-            Action::FindExperts,
-            Action::Summarize,
-            Action::DraftProposal,
-            Action::AnalyzeDocument,
-            Action::GenerateReport,
-            Action::SearchKnowledge,
-        ];
+        let actions = vec![Action::MathQuestion];
 
         for action in actions {
             let json = serde_json::to_string(&action).unwrap();
@@ -391,22 +329,18 @@ mod tests {
     }
 
     #[test]
-    fn test_all_expertise() {
-        let expertise_list = vec![
-            Expertise::MachineLearning,
-            Expertise::Embedded,
-            Expertise::Security,
-            Expertise::Cloud,
-            Expertise::Backend,
-            Expertise::Frontend,
-            Expertise::DevOps,
-            Expertise::DataScience,
-        ];
+    fn test_no_expertise_for_math_tutoring() {
+        // Math tutoring platform does not use expertise areas
+        // All intents should have empty expertise vectors
+        let intent = Intent {
+            action: Action::MathQuestion,
+            topic: Some("algebra".to_string()),
+            expertise: vec![], // Always empty for math tutoring
+            constraints: Constraints::default(),
+            content_refs: None,
+            metadata: None,
+        };
 
-        for expertise in expertise_list {
-            let json = serde_json::to_string(&expertise).unwrap();
-            let deserialized: Expertise = serde_json::from_str(&json).unwrap();
-            assert_eq!(expertise, deserialized);
-        }
+        assert!(intent.expertise.is_empty());
     }
 }

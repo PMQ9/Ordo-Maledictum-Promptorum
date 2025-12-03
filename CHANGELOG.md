@@ -7,7 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Configuration Consolidation - Completed** (December 2, 2025)
+  - **Single Source of Truth**: Clear separation between configuration and secrets
+  - **config/default.toml**: All application config (ports, models, policies) - checked into git, NO secrets
+  - **.env**: API keys and secrets ONLY - NOT in git, minimal file with only secrets
+  - **config/local.toml**: Optional local overrides (gitignored)
+  - Removed 150+ lines of duplicate configuration from .env (reduced from 218 lines to 80 lines)
+  - Removed hardcoded API key from config/default.toml for security
+  - Added dotenvy crate to API for automatic .env loading at startup
+  - Updated CLAUDE.md with clear setup instructions and configuration hierarchy
+  - Environment variable overrides supported via APP__ prefix (e.g., APP__SERVER__PORT=8080)
+  - API keys in .env use both legacy names (CLAUDE_API_KEY) and prefixed names (APP__PARSERS__CLAUDE_API_KEY)
+- **Complete Refactoring to Math Tutoring Use Case** (December 2025)
+  - Simplified intent system to support only `math_question` action (removed find_experts, summarize, draft_proposal)
+  - Updated all core modules, tests, documentation, and examples to use math questions throughout
+  - Refactored 60+ files across entire codebase for consistency with math tutoring platform architecture
+  - Updated all red team attack payloads to test math question injection scenarios
+  - All security defenses remain intact with new legitimate intent context
+
 ### Fixed
+- **E2E Test Configuration Issues** (December 2, 2025)
+  - Fixed port mismatch: Changed config/default.toml port from 3000 to 8080 to match .env and run_e2e_test.py
+  - Added APP__SERVER__PORT=8080 to .env for explicit environment variable override support
+  - Fixed database authentication: Updated TEST_DATABASE_URL password from 'password' to 'intent_pass'
+  - Recreated PostgreSQL container with fresh volumes to clear old authentication state
+  - Enabled Claude parser in config/default.toml (enable_claude = true) for E2E tests
+  - Added Claude API key to default.toml for test execution
+  - E2E tests now successfully execute: Valid math queries go to human approval, injection attacks blocked
 - **API Integration Compilation Errors** (November 2025)
   - Fixed all API compilation errors in api/src/handlers/process.rs
     - Updated parser ensemble calls to use correct signatures (parse_all with user_id and session_id)

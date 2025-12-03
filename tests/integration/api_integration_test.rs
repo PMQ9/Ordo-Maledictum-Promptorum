@@ -16,7 +16,7 @@ use test_helpers::*;
 async fn test_api_process_endpoint_clean_input() {
     // Arrange
     let request_body = json!({
-        "user_input": "Find me security experts for cloud migration",
+        "user_input": "What is 2 + 2?",
         "user_id": "user_123",
         "session_id": "session_456"
     });
@@ -54,7 +54,7 @@ async fn test_api_process_endpoint_malicious_input() {
 async fn test_api_process_endpoint_requires_approval() {
     // Arrange
     let request_body = json!({
-        "user_input": "Find experts with $75000 budget",
+        "user_input": "Solve for x: 3x + 5 = 20",
         "user_id": "user_123",
         "session_id": "session_456"
     });
@@ -72,7 +72,7 @@ async fn test_api_process_endpoint_requires_approval() {
 async fn test_api_process_endpoint_invalid_request() {
     // Arrange - Missing required fields
     let request_body = json!({
-        "user_input": "Find experts"
+        "user_input": "What is 5 + 3?"
         // Missing user_id and session_id
     });
 
@@ -104,7 +104,7 @@ async fn test_api_process_endpoint_empty_input() {
 async fn test_api_process_endpoint_returns_pipeline_info() {
     // Arrange
     let request_body = json!({
-        "user_input": "Summarize the security report",
+        "user_input": "Calculate the area of a circle with radius 5",
         "user_id": "user_123",
         "session_id": "session_456"
     });
@@ -178,7 +178,7 @@ async fn test_api_approval_submit_decision_approve() {
     let decision_body = json!({
         "approved": true,
         "approver_id": "admin_001",
-        "reason": "Budget increase justified for critical project"
+        "reason": "Equation complexity justified for educational purposes"
     });
 
     // Act
@@ -196,7 +196,7 @@ async fn test_api_approval_submit_decision_deny() {
     let decision_body = json!({
         "approved": false,
         "approver_id": "admin_001",
-        "reason": "Budget exceeds project constraints"
+        "reason": "Question complexity exceeds constraints"
     });
 
     // Act
@@ -393,7 +393,7 @@ async fn test_api_handles_malformed_json() {
 async fn test_api_handles_missing_content_type() {
     // Arrange
     let request_body = json!({
-        "user_input": "Find experts",
+        "user_input": "What is 7 + 8?",
         "user_id": "user_123",
         "session_id": "session_456"
     });
@@ -420,7 +420,7 @@ async fn test_api_cors_headers_present() {
 async fn test_api_rate_limiting() {
     // Arrange - Send many requests rapidly
     let request_body = json!({
-        "user_input": "Find experts",
+        "user_input": "What is 10 times 5?",
         "user_id": "user_123",
         "session_id": "session_456"
     });
@@ -557,12 +557,12 @@ async fn mock_process_request(body: &serde_json::Value) -> MockProcessResponse {
         };
     }
 
-    // Check for approval requirements (e.g., high budget)
-    if user_input.contains("$75000") || user_input.contains("$60000") {
+    // Check for approval requirements (e.g., complex math questions)
+    if user_input.contains("Solve for x") || user_input.contains("solve for x") {
         return MockProcessResponse {
             status: "pending_approval".to_string(),
             request_id: Some("req_124".to_string()),
-            trusted_intent: Some(json!({"action": "find_experts"})),
+            trusted_intent: Some(json!({"action": "math_question"})),
             result: None,
             message: "Request requires human approval".to_string(),
             pipeline_info: Some(MockPipelineInfo {
@@ -577,8 +577,8 @@ async fn mock_process_request(body: &serde_json::Value) -> MockProcessResponse {
     MockProcessResponse {
         status: "completed".to_string(),
         request_id: Some("req_125".to_string()),
-        trusted_intent: Some(json!({"action": "find_experts"})),
-        result: Some(json!({"experts": []})),
+        trusted_intent: Some(json!({"action": "math_question"})),
+        result: Some(json!({"answer": "4"})),
         message: "Request processed successfully".to_string(),
         pipeline_info: Some(MockPipelineInfo {
             malicious_detection: Some(json!({"blocked": false})),
@@ -593,28 +593,28 @@ async fn mock_get_approval_status(approval_id: &str) -> MockApprovalResponse {
     match approval_id {
         "approval_123" => MockApprovalResponse {
             status: "pending".to_string(),
-            intent: Some(json!({"action": "find_experts"})),
-            reason: "Budget exceeds recommended limit".to_string(),
+            intent: Some(json!({"action": "math_question"})),
+            reason: "Complex equation requires review".to_string(),
             decision: None,
         },
         "approval_456" => MockApprovalResponse {
             status: "approved".to_string(),
-            intent: Some(json!({"action": "find_experts"})),
-            reason: "Budget review required".to_string(),
+            intent: Some(json!({"action": "math_question"})),
+            reason: "Equation complexity review required".to_string(),
             decision: Some(MockDecision {
                 approved: true,
                 approver_id: "admin_001".to_string(),
-                reason: "Approved for critical project".to_string(),
+                reason: "Approved for mathematical calculation".to_string(),
             }),
         },
         "approval_789" => MockApprovalResponse {
             status: "denied".to_string(),
-            intent: Some(json!({"action": "find_experts"})),
-            reason: "Budget too high".to_string(),
+            intent: Some(json!({"action": "math_question"})),
+            reason: "Question complexity too high".to_string(),
             decision: Some(MockDecision {
                 approved: false,
                 approver_id: "admin_002".to_string(),
-                reason: "Exceeds budget constraints".to_string(),
+                reason: "Exceeds complexity constraints".to_string(),
             }),
         },
         _ => MockApprovalResponse {

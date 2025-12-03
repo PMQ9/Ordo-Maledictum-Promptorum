@@ -145,7 +145,11 @@ pub async fn process_input(
         confidence_level: format!("{:?}", voting_result.agreement_level),
         average_similarity: average_confidence as f64,
         requires_human_review,
-        explanation: format!("{:?} agreement with {} parsers", voting_result.agreement_level, voting_result.parser_results.len()),
+        explanation: format!(
+            "{:?} agreement with {} parsers",
+            voting_result.agreement_level,
+            voting_result.parser_results.len()
+        ),
     });
 
     // Store voting result in ledger
@@ -206,8 +210,7 @@ pub async fn process_input(
             .iter()
             .map(|r| r.description.clone())
             .collect(),
-        requires_elevation: comparison_result.is_hard_mismatch()
-            || requires_human_review,
+        requires_elevation: comparison_result.is_hard_mismatch() || requires_human_review,
         explanation: comparison_result.message().to_string(),
     };
 
@@ -226,7 +229,10 @@ pub async fn process_input(
             session_id: request.session_id.clone(),
             intent: canonical_intent.clone(),
             reason: if requires_human_review {
-                format!("Parser conflict: {:?} agreement", voting_result.agreement_level)
+                format!(
+                    "Parser conflict: {:?} agreement",
+                    voting_result.agreement_level
+                )
             } else {
                 format!("Policy mismatch: {}", comparison_result.message())
             },

@@ -40,7 +40,7 @@ use std::collections::HashSet;
 
 // Configure the generator
 let mut config = GeneratorConfig::default();
-config.allowed_actions.insert(Action::FindExperts);
+config.allowed_actions.insert(Action::MathQuestion);
 config.max_content_refs = 10;
 
 // Optionally enable signatures

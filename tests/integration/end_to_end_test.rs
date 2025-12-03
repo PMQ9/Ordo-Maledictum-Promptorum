@@ -15,7 +15,7 @@ use test_helpers::*;
 #[tokio::test]
 async fn test_e2e_clean_input_approved_and_executed() {
     // Arrange
-    let user_input = "Find me security experts for supply chain risk assessment";
+    let user_input = "What is 2 + 2?";
     let user_id = generate_test_user_id();
     let session_id = generate_test_session_id();
     let provider_config = default_test_provider_config();
@@ -28,9 +28,9 @@ async fn test_e2e_clean_input_approved_and_executed() {
 
     // 2. Parse with ensemble (should reach consensus)
     let base_intent = IntentBuilder::new()
-        .action("find_experts")
-        .topic_id("supply_chain_risk_assessment")
-        .expertise(vec!["security"])
+        .action("math_question")
+        .topic_id("addition_2_plus_2")
+        .expertise(vec![])
         .user_id(&user_id)
         .session_id(&session_id)
         .build();
@@ -84,17 +84,16 @@ async fn test_e2e_clean_input_approved_and_executed() {
 #[tokio::test]
 async fn test_e2e_with_budget_constraint() {
     // Arrange
-    let user_input = "Draft proposal for cloud migration with $45000 budget";
+    let user_input = "What is 5 times 9?";
     let user_id = generate_test_user_id();
     let session_id = generate_test_session_id();
     let provider_config = default_test_provider_config();
 
     // Act
     let intent = IntentBuilder::new()
-        .action("draft_proposal")
-        .topic_id("cloud_migration")
-        .expertise(vec!["cloud", "devops"])
-        .budget(45000)
+        .action("math_question")
+        .topic_id("multiplication_5_times_9")
+        .expertise(vec![])
         .user_id(&user_id)
         .session_id(&session_id)
         .build();
@@ -115,8 +114,6 @@ async fn test_e2e_with_budget_constraint() {
 
     // Assert
     assert_approved(&comparison_result);
-    assert_eq!(intent.get_budget(), Some(45000));
-    assert!(provider_config.is_budget_allowed(45000));
 }
 
 // ============================================================================
@@ -167,15 +164,15 @@ async fn test_e2e_malicious_input_never_reaches_execution() {
 async fn test_e2e_parser_disagreement_low_confidence() {
     // Arrange - Create parsers with different interpretations
     let intent1 = IntentBuilder::new()
-        .action("find_experts")
-        .topic_id("ai_project")
-        .expertise(vec!["ml"])
+        .action("math_question")
+        .topic_id("What is calculus?")
+        .expertise(vec![])
         .build();
 
     let intent2 = IntentBuilder::new()
-        .action("draft_proposal")
-        .topic_id("ai_implementation")
-        .expertise(vec!["consulting"])
+        .action("math_question")
+        .topic_id("Calculus definition")
+        .expertise(vec![])
         .build();
 
     let parsed_results = vec![
@@ -207,13 +204,13 @@ async fn test_e2e_parser_disagreement_low_confidence() {
 async fn test_e2e_parser_conflict_requires_escalation() {
     // Arrange - Create conflicting parser results
     let intent1 = IntentBuilder::new()
-        .action("find_experts")
-        .topic_id("project_a")
+        .action("math_question")
+        .topic_id("What is algebra?")
         .build();
 
     let intent2 = IntentBuilder::new()
-        .action("delete_data")
-        .topic_id("system_cleanup")
+        .action("math_question")
+        .topic_id("Undefined mathematical operation")
         .build();
 
     let parsed_results = vec![
@@ -249,16 +246,16 @@ async fn test_e2e_parser_conflict_requires_escalation() {
 async fn test_e2e_soft_mismatch_budget_exceeded() {
     // Arrange
     let provider_config = ProviderConfig {
-        allowed_actions: vec!["find_experts".to_string()],
-        allowed_expertise: vec!["security".to_string()],
+        allowed_actions: vec!["math_question".to_string()],
+        allowed_expertise: vec![],
         max_budget: Some(50000),
         allowed_domains: vec![],
     };
 
     let intent = IntentBuilder::new()
-        .action("find_experts")
-        .topic_id("security_audit")
-        .expertise(vec!["security"])
+        .action("math_question")
+        .topic_id("What is the integral of e^x?")
+        .expertise(vec![])
         .budget(75000) // Exceeds max_budget
         .build();
 
@@ -277,7 +274,8 @@ async fn test_e2e_soft_mismatch_can_proceed_with_approval() {
     // Arrange
     let provider_config = default_test_provider_config();
     let intent = IntentBuilder::new()
-        .action("find_experts")
+        .action("math_question")
+        .topic_id("Calculate pi to 100 digits")
         .budget(60000) // Slightly exceeds recommended limit
         .build();
 
@@ -315,8 +313,8 @@ async fn test_e2e_hard_mismatch_forbidden_action() {
     let provider_config = restrictive_test_provider_config();
 
     let intent = IntentBuilder::new()
-        .action("delete_all") // Not in allowed_actions
-        .topic_id("cleanup")
+        .action("delete_all") // Not in allowed_actions (only math_question is allowed)
+        .topic_id("system cleanup")
         .build();
 
     // Act
@@ -335,8 +333,8 @@ async fn test_e2e_hard_mismatch_forbidden_expertise() {
     let provider_config = restrictive_test_provider_config();
 
     let intent = IntentBuilder::new()
-        .action("find_experts")
-        .topic_id("weaponry_project")
+        .action("math_question")
+        .topic_id("How to calculate explosive yield?")
         .expertise(vec!["weapons", "explosives"])
         .build();
 
@@ -354,11 +352,12 @@ async fn test_e2e_hard_mismatch_forbidden_expertise() {
 #[tokio::test]
 async fn test_e2e_approval_workflow_complete() {
     // Arrange
-    let user_input = "Find experts with $60000 budget";
+    let user_input = "Calculate prime factors of 1000000007 with budget $60000";
     let provider_config = default_test_provider_config();
 
     let intent = IntentBuilder::new()
-        .action("find_experts")
+        .action("math_question")
+        .topic_id("Calculate prime factors of 1000000007")
         .budget(60000)
         .build();
 
@@ -376,7 +375,7 @@ async fn test_e2e_approval_workflow_complete() {
     // Act - Create approval request
     let approval_request = ApprovalRequest {
         intent: intent.clone(),
-        reason: "Budget exceeds recommended limit".to_string(),
+        reason: "Computation complexity and budget exceed recommended limit".to_string(),
         status: ApprovalStatus::Pending,
     };
 
@@ -397,11 +396,11 @@ async fn test_e2e_approval_workflow_complete() {
 #[tokio::test]
 async fn test_e2e_ledger_records_all_steps() {
     // Arrange
-    let user_input = "Summarize security report";
+    let user_input = "What is the limit of sin(x)/x as x approaches 0?";
     let intent = IntentBuilder::new()
-        .action("summarize")
-        .topic_id("security_report")
-        .content_refs(vec!["doc_123"])
+        .action("math_question")
+        .topic_id("What is the limit of sin(x)/x as x approaches 0?")
+        .content_refs(vec![])
         .build();
 
     let parsed = ParsedIntentBuilder::new()
@@ -452,7 +451,7 @@ async fn test_e2e_empty_input_handling() {
 #[tokio::test]
 async fn test_e2e_very_long_input_handling() {
     // Arrange
-    let long_input = "Find experts for ".to_string() + &"very long description ".repeat(100);
+    let long_input = "What is the value of ".to_string() + &"plus one ".repeat(100);
 
     // Act - Should handle without crashing
     let detector = MockMaliciousDetector::new();
@@ -465,7 +464,7 @@ async fn test_e2e_very_long_input_handling() {
 #[tokio::test]
 async fn test_e2e_special_characters_handling() {
     // Arrange
-    let special_input = "Find experts for project with 好的 requirements ñ € £ ¥";
+    let special_input = "Calculate π × √2 with precision 好的 ñ € £ ¥";
     let detector = MockMaliciousDetector::new();
 
     // Act

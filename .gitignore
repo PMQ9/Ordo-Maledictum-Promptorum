@@ -4,10 +4,6 @@
 *.pdb
 Cargo.lock
 
-# Environment
-.env
-.env.local
-
 # Database
 *.db
 *.sqlite
@@ -36,10 +32,17 @@ frontend/build/
 coverage/
 *.profraw
 *.profdata
+tests/e2e/e2e_test_results.json
 
 # Temporary files
 tmp/
 temp/
 
-# Environment files
+# Environment and configuration files
 .env
+.env.local
+.env.*.local
+config/*.toml
+!config/*.example.toml
+*.toml.local
+core/notifications/notifications.toml

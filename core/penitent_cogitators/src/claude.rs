@@ -128,7 +128,10 @@ Be conservative - if unsure, flag as suspicious."#
     }
 
     /// Parse batch diagnostic response
-    fn parse_batch_response(&self, content: &str) -> Result<Vec<BatchDiagnosticResult>, CogitatorError> {
+    fn parse_batch_response(
+        &self,
+        content: &str,
+    ) -> Result<Vec<BatchDiagnosticResult>, CogitatorError> {
         serde_json::from_str::<Vec<BatchDiagnosticResult>>(content).map_err(|e| {
             CogitatorError::DetectionError(format!("Failed to parse batch diagnostics JSON: {}", e))
         })
@@ -258,8 +261,9 @@ impl SacrificialCogitator for ClaudeCogitator {
         }
 
         // Format all diagnostics as JSON for single request
-        let diagnostic_json = serde_json::to_string(&diagnostics)
-            .map_err(|e| CogitatorError::DetectionError(format!("Failed to serialize diagnostics: {}", e)))?;
+        let diagnostic_json = serde_json::to_string(&diagnostics).map_err(|e| {
+            CogitatorError::DetectionError(format!("Failed to serialize diagnostics: {}", e))
+        })?;
 
         // Get system prompt with caching
         let system_prompt = self.get_batch_diagnostic_system_prompt_cached().await;

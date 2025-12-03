@@ -96,7 +96,10 @@ impl AppState {
 
         // Initialize parser ensemble
         let ensemble = ParserEnsemble::new(parser_config);
-        tracing::info!("Parser ensemble initialized with {} parsers", ensemble.parser_count());
+        tracing::info!(
+            "Parser ensemble initialized with {} parsers",
+            ensemble.parser_count()
+        );
 
         // Initialize voting module
         let voting = VotingModule::new();
@@ -107,8 +110,14 @@ impl AppState {
         // Initialize intent generator
         let generator = TrustedIntentGenerator::with_defaults();
 
-        // Initialize processing engine
-        let engine = ProcessingEngine::new();
+        // Initialize processing engine with Claude API key from config
+        let engine_config = processing_engine::EngineConfig {
+            verbose: false,
+            max_execution_time_ms: 30_000,
+            claude_api_key: config.parsers.claude_api_key.clone(),
+            claude_model: config.parsers.claude_model.clone(),
+        };
+        let engine = ProcessingEngine::with_config(engine_config);
 
         // Initialize ledger
         let ledger = IntentLedger::from_pool(db_pool.clone());

@@ -6,9 +6,9 @@
 #[cfg(feature = "caching")]
 use intent_redis_cache::RedisCache;
 #[cfg(feature = "caching")]
-use intent_schema::cache::CacheBackend;
-#[cfg(feature = "caching")]
 use intent_schema::cache::cache_keys;
+#[cfg(feature = "caching")]
+use intent_schema::cache::CacheBackend;
 #[cfg(feature = "caching")]
 use std::sync::OnceLock;
 #[cfg(feature = "caching")]
@@ -24,9 +24,7 @@ static LEDGER_QUERY_CACHE: OnceLock<CacheState> = OnceLock::new();
 
 #[cfg(feature = "caching")]
 async fn get_cache() -> Option<&'static CacheState> {
-    LEDGER_QUERY_CACHE
-        .get_or_init(|| Mutex::new(None))
-        .into()
+    LEDGER_QUERY_CACHE.get_or_init(|| Mutex::new(None)).into()
 }
 
 /// Check if ledger stats are cached
@@ -50,23 +48,27 @@ pub async fn stats_cached() -> bool {
 /// Cache ledger statistics
 ///
 /// Stores statistics in Redis with TTL for 60 seconds.
-pub async fn cache_ledger_stats(
-    #[allow(unused_variables)] stats: &LedgerStats,
-) {
+pub async fn cache_ledger_stats(#[allow(unused_variables)] stats: &LedgerStats) {
     #[cfg(feature = "caching")]
     {
         if let Some(cache_state) = get_cache().await {
             let cache_lock = cache_state.lock().await;
             if let Some(cache) = cache_lock.as_ref() {
                 if let Ok(stats_bytes) = serde_json::to_vec(stats) {
-                    if let Err(e) = cache.set(
-                        cache_keys::LEDGER_STATS_KEY,
-                        stats_bytes,
-                        cache_keys::LEDGER_STATS_TTL_SECS,
-                    ).await {
+                    if let Err(e) = cache
+                        .set(
+                            cache_keys::LEDGER_STATS_KEY,
+                            stats_bytes,
+                            cache_keys::LEDGER_STATS_TTL_SECS,
+                        )
+                        .await
+                    {
                         tracing::debug!("Failed to cache ledger statistics: {}", e);
                     } else {
-                        tracing::debug!("Ledger statistics cached (TTL: {}s)", cache_keys::LEDGER_STATS_TTL_SECS);
+                        tracing::debug!(
+                            "Ledger statistics cached (TTL: {}s)",
+                            cache_keys::LEDGER_STATS_TTL_SECS
+                        );
                     }
                 }
             }

@@ -420,20 +420,20 @@ impl TrustedIntentGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use intent_schema::{Action, Expertise, ParsedIntent};
+    use intent_schema::{Action, Expertise};
 
     fn create_test_voted_intent() -> VotedIntent {
         VotedIntent {
-            action: Action::FindExperts,
-            topic: "Supply Chain Risk Analysis".to_string(),
-            expertise: vec![Expertise::Security, Expertise::Security], // Duplicate
+            action: Action::MathQuestion,
+            topic: "What is the square root of 144?".to_string(),
+            expertise: vec![], // math_question doesn't use expertise
             constraints: Some(Constraints {
                 max_budget: Some(20000),
                 max_results: Some(5),
                 deadline: None,
                 additional: std::collections::HashMap::new(),
             }),
-            content_refs: vec!["doc_1321".to_string(), "doc_1322".to_string()],
+            content_refs: vec![],
             confidence: 0.95,
             requires_approval: false,
             parser_results: vec![],
@@ -452,7 +452,7 @@ mod tests {
     #[tokio::test]
     async fn test_generate_trusted_intent() {
         let mut config = GeneratorConfig::default();
-        config.allowed_actions.insert(Action::FindExperts);
+        config.allowed_actions.insert(Action::MathQuestion);
 
         let generator = TrustedIntentGenerator::new(config);
         let voted_intent = create_test_voted_intent();
@@ -462,10 +462,10 @@ mod tests {
         assert!(result.is_ok());
 
         let trusted = result.unwrap();
-        assert_eq!(trusted.action, Action::FindExperts);
-        assert_eq!(trusted.topic_id, "supply_chain_risk_analysis");
-        assert_eq!(trusted.expertise.len(), 1); // Deduplicated
-        assert_eq!(trusted.content_refs.len(), 2);
+        assert_eq!(trusted.action, Action::MathQuestion);
+        assert_eq!(trusted.topic_id, "what_is_the_square_root_of_144");
+        assert_eq!(trusted.expertise.len(), 0); // No expertise for math questions
+        assert_eq!(trusted.content_refs.len(), 0);
         assert_eq!(trusted.user_id, "user_123");
         assert!(trusted.signature.is_none()); // Signing disabled
     }
@@ -546,7 +546,7 @@ mod tests {
         let mut config = GeneratorConfig::default();
         config.enable_signatures = true;
         config.signing_key = Some(b"test_secret_key_32_bytes_long!!!".to_vec());
-        config.allowed_actions.insert(Action::FindExperts);
+        config.allowed_actions.insert(Action::MathQuestion);
 
         let generator = TrustedIntentGenerator::new(config);
         let voted_intent = create_test_voted_intent();
@@ -565,7 +565,7 @@ mod tests {
     #[tokio::test]
     async fn test_no_raw_content_validation() {
         let mut config = GeneratorConfig::default();
-        config.allowed_actions.insert(Action::FindExperts);
+        config.allowed_actions.insert(Action::MathQuestion);
 
         let generator = TrustedIntentGenerator::new(config);
 
@@ -583,23 +583,18 @@ mod tests {
     #[tokio::test]
     async fn test_expertise_deduplication() {
         let mut config = GeneratorConfig::default();
-        config.allowed_actions.insert(Action::FindExperts);
+        config.allowed_actions.insert(Action::MathQuestion);
 
         let generator = TrustedIntentGenerator::new(config);
 
         let mut voted_intent = create_test_voted_intent();
-        voted_intent.expertise = vec![
-            Expertise::Security,
-            Expertise::MachineLearning,
-            Expertise::Security,        // Duplicate
-            Expertise::MachineLearning, // Duplicate
-            Expertise::Cloud,
-        ];
+        // math_question doesn't use expertise, but test with empty list
+        voted_intent.expertise = vec![];
 
         let metadata = create_test_metadata();
         let trusted = generator.generate(voted_intent, metadata).await.unwrap();
 
-        // Should have only 3 unique expertise areas
-        assert_eq!(trusted.expertise.len(), 3);
+        // Should have 0 expertise areas (math questions don't use expertise)
+        assert_eq!(trusted.expertise.len(), 0);
     }
 }

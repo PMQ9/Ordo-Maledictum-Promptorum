@@ -180,8 +180,8 @@ impl ParserConfig {
             std::env::var("OPENAI_MODEL").unwrap_or_else(|_| "gpt-5-nano".to_string());
         let deepseek_model =
             std::env::var("DEEPSEEK_MODEL").unwrap_or_else(|_| "deepseek-chat".to_string());
-        let claude_model = std::env::var("CLAUDE_MODEL")
-            .unwrap_or_else(|_| "claude-3-haiku-20240307".to_string());
+        let claude_model =
+            std::env::var("CLAUDE_MODEL").unwrap_or_else(|_| "claude-3-haiku-20240307".to_string());
 
         Ok(Self {
             enable_openai: std::env::var("ENABLE_OPENAI")

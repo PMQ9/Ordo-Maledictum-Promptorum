@@ -21,7 +21,7 @@ impl Default for ChatGPTCogitatorConfig {
         Self {
             api_key: String::new(),
             model: "gpt-5-nano".to_string(), // Cheapest OpenAI model
-            timeout_secs: 10, // Fast timeout for sacrificial LLM
+            timeout_secs: 10,                // Fast timeout for sacrificial LLM
             base_url: "https://api.openai.com/v1".to_string(),
         }
     }
@@ -103,7 +103,7 @@ impl Default for ClaudeCogitatorConfig {
         Self {
             api_key: String::new(),
             model: "claude-3-haiku-20240307".to_string(), // Cheapest Claude model
-            timeout_secs: 10, // Fast timeout for sacrificial LLM
+            timeout_secs: 10,                             // Fast timeout for sacrificial LLM
             base_url: "https://api.anthropic.com/v1".to_string(),
         }
     }

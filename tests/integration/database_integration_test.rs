@@ -20,8 +20,8 @@ async fn test_db_store_ledger_entry() {
     db.clear_all().await;
 
     let intent = IntentBuilder::new()
-        .action("find_experts")
-        .topic_id("security_audit")
+        .action("math_question")
+        .topic_id("What is the Pythagorean theorem?")
         .build();
 
     let parsed = ParsedIntentBuilder::new()
@@ -97,7 +97,8 @@ async fn test_db_query_ledger_by_user_id() {
     // Create multiple entries
     for i in 0..5 {
         let intent = IntentBuilder::new()
-            .action("find_experts")
+            .action("math_question")
+            .topic_id(&format!("What is {} + {}?", i, i + 1))
             .user_id(user_id)
             .session_id(&format!("{}_{}", session_id, i))
             .build();

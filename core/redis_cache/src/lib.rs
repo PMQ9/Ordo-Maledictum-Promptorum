@@ -77,7 +77,10 @@ impl RedisConfig {
 
     fn connection_string(&self) -> String {
         if let Some(password) = &self.password {
-            format!("redis://:{}@{}:{}/{}", password, self.host, self.port, self.db)
+            format!(
+                "redis://:{}@{}:{}/{}",
+                password, self.host, self.port, self.db
+            )
         } else {
             format!("redis://{}:{}/{}", self.host, self.port, self.db)
         }
@@ -154,13 +157,15 @@ impl CacheBackend for RedisCache {
 
         if ttl_secs > 0 {
             let ttl: u64 = ttl_secs as u64;
-            let _: () = conn.set_ex::<_, _, ()>(key, value, ttl)
+            let _: () = conn
+                .set_ex::<_, _, ()>(key, value, ttl)
                 .await
                 .map_err(|e| {
                     RedisCacheError::CommandError(format!("SET with TTL {} failed: {}", key, e))
                 })?;
         } else {
-            let _: () = conn.set::<_, _, ()>(key, value)
+            let _: () = conn
+                .set::<_, _, ()>(key, value)
                 .await
                 .map_err(|e| RedisCacheError::CommandError(format!("SET {} failed: {}", key, e)))?;
         }
@@ -171,7 +176,8 @@ impl CacheBackend for RedisCache {
 
     async fn delete(&self, key: &str) -> Result<(), CacheError> {
         let mut conn = (*self.conn).clone();
-        let _: () = conn.del::<_, ()>(key)
+        let _: () = conn
+            .del::<_, ()>(key)
             .await
             .map_err(|e| RedisCacheError::CommandError(format!("DEL {} failed: {}", key, e)))?;
 

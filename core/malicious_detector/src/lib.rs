@@ -277,10 +277,10 @@ mod tests {
 
         let clean_inputs = vec![
             "Hello, how are you?",
-            "Please find experts in machine learning",
-            "I need help with my project",
-            "Can you summarize this document?",
-            "What's the weather like today?",
+            "What is 2 + 2?",
+            "I need help with my math homework",
+            "Can you solve this equation: 3x + 5 = 20?",
+            "Calculate the area of a circle with radius 5",
         ];
 
         for input in clean_inputs {

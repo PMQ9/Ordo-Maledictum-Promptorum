@@ -20,16 +20,13 @@ The Processing Engine module has been successfully implemented as a type-safe, s
 │   ├── Cargo.toml
 │   └── src/
 │       └── lib.rs (899 lines)
-│           ├── Action enum (6 variants)
+│           ├── Action enum (1 variant: MathQuestion)
 │           ├── Expertise enum (8 variants)
 │           ├── Constraints struct
 │           ├── Intent struct
 │           ├── ProcessingResult struct
 │           ├── ProcessingMetadata struct
-│           ├── Expert struct
-│           ├── DocumentSummary struct
-│           ├── Proposal struct
-│           ├── ProposalSection struct
+│           ├── MathResult struct
 │           ├── TrustedIntent struct
 │           └── Helper types and tests
 │
@@ -45,16 +42,9 @@ The Processing Engine module has been successfully implemented as a type-safe, s
             ├── ProcessingError enum
             ├── EngineConfig struct
             ├── execute() method (main entry point)
-            ├── execute_find_experts()
-            ├── execute_summarize()
-            ├── execute_draft_proposal()
-            ├── execute_analyze_document()
-            ├── execute_generate_report()
-            ├── execute_search_knowledge()
-            ├── find_experts() (mock implementation)
-            ├── summarize_document() (mock implementation)
-            ├── draft_proposal() (mock implementation)
-            └── 9 comprehensive unit tests
+            ├── execute_math_question()
+            ├── solve_math_question() (mock implementation)
+            └── comprehensive unit tests
 ```
 
 ## Key Features Implemented
@@ -66,9 +56,9 @@ The engine only accepts structured `Intent` types, making prompt injection impos
 ```rust
 // ✅ This compiles and works
 let intent = Intent {
-    action: Action::FindExperts,
-    topic: Some("cybersecurity".to_string()),
-    expertise: vec![Expertise::Security],
+    action: Action::MathQuestion,
+    topic: Some("What is 2 + 2?".to_string()),
+    expertise: vec![],
     constraints: Constraints::default(),
     content_refs: None,
     metadata: None,
@@ -76,7 +66,7 @@ let intent = Intent {
 engine.execute(&intent).await;
 
 // ❌ This DOES NOT compile - type safety prevents it
-let raw_prompt = "Find me experts";
+let raw_prompt = "What is 2 + 2?";
 engine.execute(raw_prompt).await;  // Type error!
 ```
 
@@ -86,12 +76,7 @@ Each action maps to a specific, typed function:
 
 | Action | Function | Returns |
 |--------|----------|---------|
-| `FindExperts` | `find_experts()` | `Vec<Expert>` |
-| `Summarize` | `summarize_document()` | `DocumentSummary` |
-| `DraftProposal` | `draft_proposal()` | `Proposal` |
-| `AnalyzeDocument` | `analyze_document()` | Analysis JSON |
-| `GenerateReport` | `generate_report()` | Report JSON |
-| `SearchKnowledge` | `search_knowledge()` | Results JSON |
+| `MathQuestion` | `solve_math_question()` | `MathResult` |
 
 ### 3. Structured ProcessingResult
 
@@ -125,19 +110,15 @@ pub struct ProcessingMetadata {
 
 ## Example Executions
 
-### Example 1: Find Experts
+### Example 1: Simple Addition
 
 **Input Intent:**
 ```rust
 Intent {
-    action: Action::FindExperts,
-    topic: Some("supply_chain_risk".to_string()),
-    expertise: vec![Expertise::Security],
-    constraints: Constraints {
-        max_budget: Some(300),
-        max_results: Some(5),
-        ..Default::default()
-    },
+    action: Action::MathQuestion,
+    topic: Some("What is 2 + 2?".to_string()),
+    expertise: vec![],
+    constraints: Constraints::default(),
     content_refs: None,
     metadata: None,
 }
@@ -147,38 +128,23 @@ Intent {
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
-  "action": "find_experts",
+  "action": "math_question",
   "success": true,
   "data": {
-    "experts": [
-      {
-        "id": "exp_001",
-        "name": "Dr. Sarah Chen",
-        "expertise": ["security", "cloud"],
-        "availability": true,
-        "hourly_rate": 250,
-        "confidence_score": 0.95,
-        "bio": "Expert in cloud security with 15 years of experience",
-        "years_experience": 15
-      },
-      {
-        "id": "exp_002",
-        "name": "James Rodriguez",
-        "expertise": ["machine_learning", "data_science"],
-        "availability": true,
-        "hourly_rate": 200,
-        "confidence_score": 0.88,
-        "bio": "ML researcher and practitioner",
-        "years_experience": 10
-      }
-    ],
-    "count": 2
+    "question": "What is 2 + 2?",
+    "answer": "4",
+    "explanation": "Adding 2 and 2 gives us 4.",
+    "confidence": 1.0,
+    "calculation_steps": [
+      "Step 1: Identify the operation: addition",
+      "Step 2: Add the numbers: 2 + 2 = 4"
+    ]
   },
   "metadata": {
     "started_at": "2025-11-23T00:45:00.123Z",
     "completed_at": "2025-11-23T00:45:00.125Z",
     "duration_ms": 2,
-    "function_called": "find_experts",
+    "function_called": "solve_math_question",
     "warnings": []
   },
   "error": null,
@@ -186,16 +152,16 @@ Intent {
 }
 ```
 
-### Example 2: Summarize Document
+### Example 2: Solving an Equation
 
 **Input Intent:**
 ```rust
 Intent {
-    action: Action::Summarize,
-    topic: Some("cybersecurity_trends_2024".to_string()),
+    action: Action::MathQuestion,
+    topic: Some("Solve for x: 3x + 5 = 20".to_string()),
     expertise: vec![],
     constraints: Default::default(),
-    content_refs: Some(vec!["doc_cs_trends_2024".to_string()]),
+    content_refs: None,
     metadata: None,
 }
 ```
@@ -204,28 +170,25 @@ Intent {
 ```json
 {
   "id": "660e8400-e29b-41d4-a716-446655440001",
-  "action": "summarize",
+  "action": "math_question",
   "success": true,
   "data": {
-    "summary": {
-      "document_id": "doc_cs_trends_2024",
-      "title": "Document: doc_cs_trends_2024",
-      "summary": "This document covers cybersecurity_trends_2024. It provides comprehensive analysis and actionable recommendations for stakeholders.",
-      "key_points": [
-        "Key finding 1: Market analysis shows strong growth potential",
-        "Key finding 2: Risk mitigation strategies are essential",
-        "Key finding 3: Timeline estimates are optimistic but achievable"
-      ],
-      "word_count": 2500,
-      "confidence": 0.89,
-      "generated_at": "2025-11-23T00:45:00.200Z"
-    }
+    "question": "Solve for x: 3x + 5 = 20",
+    "answer": "x = 5",
+    "explanation": "To solve for x, we isolate the variable by performing inverse operations.",
+    "confidence": 1.0,
+    "calculation_steps": [
+      "Step 1: Start with 3x + 5 = 20",
+      "Step 2: Subtract 5 from both sides: 3x = 15",
+      "Step 3: Divide both sides by 3: x = 5",
+      "Step 4: Verify: 3(5) + 5 = 15 + 5 = 20 ✓"
+    ]
   },
   "metadata": {
     "started_at": "2025-11-23T00:45:00.199Z",
     "completed_at": "2025-11-23T00:45:00.200Z",
     "duration_ms": 1,
-    "function_called": "summarize_document",
+    "function_called": "solve_math_question",
     "warnings": []
   },
   "error": null,
@@ -233,18 +196,15 @@ Intent {
 }
 ```
 
-### Example 3: Draft Proposal
+### Example 3: Circle Area Calculation
 
 **Input Intent:**
 ```rust
 Intent {
-    action: Action::DraftProposal,
-    topic: Some("ai_integration_project".to_string()),
-    expertise: vec![Expertise::MachineLearning, Expertise::Security],
-    constraints: Constraints {
-        max_budget: Some(75000),
-        ..Default::default()
-    },
+    action: Action::MathQuestion,
+    topic: Some("Calculate the area of a circle with radius 5".to_string()),
+    expertise: vec![],
+    constraints: Constraints::default(),
     content_refs: None,
     metadata: None,
 }
@@ -254,44 +214,25 @@ Intent {
 ```json
 {
   "id": "770e8400-e29b-41d4-a716-446655440002",
-  "action": "draft_proposal",
+  "action": "math_question",
   "success": true,
   "data": {
-    "proposal": {
-      "id": "prop_a1b2c3d4-e5f6-7890-1234-567890abcdef",
-      "title": "Proposal: ai_integration_project",
-      "sections": [
-        {
-          "heading": "Executive Summary",
-          "content": "This proposal outlines a comprehensive approach to ai_integration_project. We bring together experts in [MachineLearning, Security] to deliver exceptional results.",
-          "order": 1
-        },
-        {
-          "heading": "Scope of Work",
-          "content": "Detailed breakdown of deliverables, milestones, and timeline.",
-          "order": 2
-        },
-        {
-          "heading": "Team and Expertise",
-          "content": "Our team comprises industry-leading experts with proven track records.",
-          "order": 3
-        },
-        {
-          "heading": "Budget and Timeline",
-          "content": "Estimated budget: $75000. Timeline: 12-16 weeks.",
-          "order": 4
-        }
-      ],
-      "created_at": "2025-11-23T00:45:00.300Z",
-      "estimated_budget": 75000,
-      "timeline_weeks": 14
-    }
+    "question": "Calculate the area of a circle with radius 5",
+    "answer": "78.54",
+    "explanation": "The area of a circle is calculated using the formula A = πr²",
+    "confidence": 1.0,
+    "calculation_steps": [
+      "Step 1: Identify the formula: A = πr²",
+      "Step 2: Substitute radius r = 5: A = π(5)²",
+      "Step 3: Calculate: A = π × 25",
+      "Step 4: A = 3.14159 × 25 ≈ 78.54 square units"
+    ]
   },
   "metadata": {
     "started_at": "2025-11-23T00:45:00.299Z",
     "completed_at": "2025-11-23T00:45:00.300Z",
     "duration_ms": 1,
-    "function_called": "draft_proposal",
+    "function_called": "solve_math_question",
     "warnings": []
   },
   "error": null,
@@ -313,13 +254,8 @@ Any attempt to pass a string or unstructured data will result in a compile-time 
 
 ### 2. Explicit Action Whitelist
 
-Only the 6 predefined actions can execute:
-- `FindExperts`
-- `Summarize`
-- `DraftProposal`
-- `AnalyzeDocument`
-- `GenerateReport`
-- `SearchKnowledge`
+Only the predefined action can execute:
+- `MathQuestion`
 
 No dynamic action creation is possible.
 
@@ -339,37 +275,23 @@ Every execution generates:
 
 ## Mock Implementation Functions
 
-All function implementations are currently mocks that demonstrate the type-safe pattern:
+The function implementation is currently a mock that demonstrates the type-safe pattern:
 
-1. **find_experts()**
-   - Filters by budget
-   - Limits results
-   - Returns structured Expert objects
-
-2. **summarize_document()**
-   - Validates document refs exist
-   - Returns structured DocumentSummary
-   - Includes confidence scores
-
-3. **draft_proposal()**
-   - Generates structured sections
-   - Calculates estimated budget
-   - Provides timeline estimates
-   - Returns warnings if needed
+1. **solve_math_question()**
+   - Parses mathematical expressions
+   - Performs calculations
+   - Returns structured MathResult with steps
+   - Includes confidence scores and explanations
 
 ## Testing
 
-The module includes 9 comprehensive tests:
+The module includes comprehensive tests:
 
-1. `test_execute_find_experts` - Verifies expert finding with constraints
-2. `test_execute_summarize` - Verifies document summarization
-3. `test_execute_draft_proposal` - Verifies proposal generation
-4. `test_no_raw_prompts` - Demonstrates type safety
-5. `test_find_experts_filters_by_budget` - Tests budget filtering
-6. `test_summarize_document_structure` - Tests summary structure
-7. `test_draft_proposal_structure` - Tests proposal structure
-8. (Additional schema tests for validation)
-9. (Additional schema tests for similarity)
+1. `test_execute_math_question` - Verifies math question solving
+2. `test_no_raw_prompts` - Demonstrates type safety
+3. `test_solve_math_question_structure` - Tests result structure
+4. (Additional schema tests for validation)
+5. (Additional schema tests for similarity)
 
 **Run tests:**
 ```bash
@@ -410,15 +332,15 @@ ledger.record_processing(&result).await?;
 
 1. **Replace Mock Functions with Real Implementations**
    ```rust
-   async fn find_experts(...) -> Vec<Expert> {
-       database::query_experts(topic, expertise).await
+   async fn solve_math_question(...) -> MathResult {
+       math_engine::evaluate(question).await
    }
    ```
 
 2. **Add LLM Integration with Structured Outputs**
    ```rust
-   async fn summarize_document(...) -> DocumentSummary {
-       llm::generate_structured::<DocumentSummary>(
+   async fn solve_math_question(...) -> MathResult {
+       llm::generate_structured::<MathResult>(
            prompt,
            schema,
            temperature=0.0

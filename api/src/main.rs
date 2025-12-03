@@ -40,6 +40,10 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Load .env file if it exists (for API keys and secrets)
+    // Silently ignore if .env doesn't exist (allows production with system env vars)
+    let _ = dotenvy::dotenv();
+
     // Initialize tracing/logging
     init_tracing();
     eprintln!("[STARTUP] Initializing tracing...");
@@ -51,15 +55,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         e
     })?;
     eprintln!("[STARTUP] Configuration loaded successfully");
-    eprintln!("[STARTUP] Database URL configured: postgresql://*:*@{}:{}/{}",
-        "localhost", 5432, "intent_segregation");
+    eprintln!(
+        "[STARTUP] Database URL configured: postgresql://*:*@{}:{}/{}",
+        "localhost", 5432, "intent_segregation"
+    );
     eprintln!("[STARTUP] Server port: {}", config.server.port);
 
     // Initialize application state
     eprintln!("[STARTUP] Creating database connection pool...");
     let state = AppState::new(config.clone()).await.map_err(|e| {
         eprintln!("[FATAL] Failed to initialize application state: {}", e);
-        eprintln!("[FATAL] Check that PostgreSQL is running at {}", config.database.url);
+        eprintln!(
+            "[FATAL] Check that PostgreSQL is running at {}",
+            config.database.url
+        );
         e
     })?;
     let state = Arc::new(state);
@@ -76,12 +85,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     eprintln!("[STARTUP] Binding to {}", addr);
     info!("Starting server on {}", addr);
 
-    let listener = tokio::net::TcpListener::bind(&addr)
-        .await
-        .map_err(|e| {
-            eprintln!("[FATAL] Failed to bind to {}: {}", addr, e);
-            e
-        })?;
+    let listener = tokio::net::TcpListener::bind(&addr).await.map_err(|e| {
+        eprintln!("[FATAL] Failed to bind to {}: {}", addr, e);
+        e
+    })?;
 
     eprintln!("[STARTUP] Server listening on {}", addr);
 

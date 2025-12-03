@@ -5,9 +5,9 @@
 
 #[cfg(feature = "caching")]
 use intent_redis_cache::RedisCache;
+use intent_schema::cache::cache_keys;
 #[cfg(feature = "caching")]
 use intent_schema::cache::CacheBackend;
-use intent_schema::cache::cache_keys;
 #[cfg(feature = "caching")]
 use std::sync::OnceLock;
 #[cfg(feature = "caching")]
@@ -33,10 +33,8 @@ async fn get_cache() -> Option<&'static CacheState> {
 ///
 /// Falls back to returning the provided prompt if caching is unavailable.
 pub async fn get_cached_system_prompt(
-    #[allow(unused_variables)]
-    prompt_key: &str,
-    #[allow(unused_variables)]
-    ttl_secs: usize,
+    #[allow(unused_variables)] prompt_key: &str,
+    #[allow(unused_variables)] ttl_secs: usize,
     build_prompt: impl Fn() -> String,
 ) -> String {
     #[cfg(feature = "caching")]
@@ -50,7 +48,9 @@ pub async fn get_cached_system_prompt(
                     *cache_lock = Some(cache);
                     tracing::info!("Cogitator system prompt cache initialized (Redis)");
                 } else {
-                    tracing::debug!("Redis unavailable for cogitator prompt caching, will recompute");
+                    tracing::debug!(
+                        "Redis unavailable for cogitator prompt caching, will recompute"
+                    );
                 }
             }
 
@@ -137,7 +137,10 @@ pub async fn get_cached_corruption_test(
                 let cache_key = cache_keys::vault_corruption_key(input_hash);
                 if let Ok(Some(cached_bytes)) = cache.get(&cache_key).await {
                     if let Ok(result_str) = String::from_utf8(cached_bytes) {
-                        tracing::debug!("Vault corruption test cache hit for input: {}", input_hash);
+                        tracing::debug!(
+                            "Vault corruption test cache hit for input: {}",
+                            input_hash
+                        );
                         return Some(result_str);
                     }
                 }
@@ -160,10 +163,21 @@ pub async fn cache_corruption_test(
             if let Some(cache) = cache_lock.as_ref() {
                 let cache_key = cache_keys::vault_corruption_key(input_hash);
                 if let Ok(result_bytes) = result.as_bytes().to_vec() {
-                    if let Err(e) = cache.set(&cache_key, result_bytes, cache_keys::VAULT_CORRUPTION_TTL_SECS).await {
+                    if let Err(e) = cache
+                        .set(
+                            &cache_key,
+                            result_bytes,
+                            cache_keys::VAULT_CORRUPTION_TTL_SECS,
+                        )
+                        .await
+                    {
                         tracing::debug!("Failed to cache vault corruption test: {}", e);
                     } else {
-                        tracing::debug!("Vault corruption test cached for input: {} (TTL: {}s)", input_hash, cache_keys::VAULT_CORRUPTION_TTL_SECS);
+                        tracing::debug!(
+                            "Vault corruption test cached for input: {} (TTL: {}s)",
+                            input_hash,
+                            cache_keys::VAULT_CORRUPTION_TTL_SECS
+                        );
                     }
                 }
             }
@@ -178,7 +192,8 @@ mod tests {
     #[tokio::test]
     async fn test_prompt_caching_fallback() {
         let prompt = "test cogitator prompt";
-        let cached = get_cached_system_prompt("test_cogitator_key", 3600, || prompt.to_string()).await;
+        let cached =
+            get_cached_system_prompt("test_cogitator_key", 3600, || prompt.to_string()).await;
         assert_eq!(cached, prompt);
     }
 

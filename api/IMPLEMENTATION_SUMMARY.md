@@ -299,7 +299,7 @@ url = "postgresql://user:pass@localhost:5432/intent_db"
 enable_deterministic = true
 
 [provider]
-allowed_actions = ["find_experts", "summarize"]
+allowed_actions = ["math_question"]
 ```
 
 ### Full Configuration
@@ -331,7 +331,7 @@ curl http://localhost:3000/health
 curl -X POST http://localhost:3000/api/process \
   -H "Content-Type: application/json" \
   -d '{
-    "user_input": "Find ML experts",
+    "user_input": "What is 2 + 2?",
     "user_id": "test_user",
     "session_id": "test_session"
   }'

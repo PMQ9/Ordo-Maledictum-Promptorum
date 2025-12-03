@@ -42,10 +42,10 @@ A rule-based parser that uses keyword matching and regex patterns to extract int
 use intent_parsers::DeterministicParser;
 
 let parser = DeterministicParser::new();
-let result = parser.parse("Find experts in ML with budget $50000").await?;
+let result = parser.parse("What is 10 + 15?").await?;
 
 println!("Action: {:?}", result.intent.action);
-println!("Expertise: {:?}", result.intent.expertise);
+println!("Topic: {:?}", result.intent.topic_id);
 ```
 
 ### 2. OllamaParser
@@ -73,7 +73,7 @@ let config = OllamaConfig {
 };
 
 let parser = OllamaParser::new(config);
-let result = parser.parse("Summarize blockchain security research").await?;
+let result = parser.parse("Calculate the derivative of x^2 + 3x").await?;
 ```
 
 **Supported Models:**
@@ -87,7 +87,7 @@ let result = parser.parse("Summarize blockchain security research").await?;
 
 **Trust Level:** 0.8 (Medium-High)
 
-Uses OpenAI's API for intent parsing with models like GPT-4o-mini.
+Uses OpenAI's API for intent parsing with models like gpt-5-nano.
 
 **Features:**
 - High-quality parsing with latest GPT models
@@ -109,7 +109,7 @@ let config = OpenAIConfig {
 };
 
 let parser = OpenAIParser::new(config);
-let result = parser.parse("Draft a proposal for AI security audit").await?;
+let result = parser.parse("Solve for x in the equation 3x + 7 = 25").await?;
 ```
 
 ## ParserEnsemble
@@ -126,7 +126,7 @@ let config = ParserConfig::from_env()?;
 let ensemble = ParserEnsemble::new(config);
 
 // Parse with all enabled parsers
-let result = ensemble.parse_all("Find cloud security experts").await;
+let result = ensemble.parse_all("What is the square root of 256?").await;
 
 println!("Success: {}/{} parsers", result.success_count, result.parsers_count);
 println!("Total time: {}ms", result.total_time_ms);
@@ -214,7 +214,7 @@ async fn main() -> anyhow::Result<()> {
     let ensemble = ParserEnsemble::new(config);
 
     // User input
-    let user_input = "Find top 5 machine learning experts with budget $50,000";
+    let user_input = "Calculate the area of a circle with radius 12";
 
     // Parse with all parsers in parallel
     let result = ensemble.parse_all(user_input).await;

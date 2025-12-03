@@ -51,7 +51,7 @@ pub trait IntentParser: Send + Sync {
 - **Trust Level**: 0.8 (Medium-High)
 - **Approach**: Cloud LLM inference via OpenAI API
 - **Features**:
-  - Uses gpt-4o-mini by default
+  - Uses gpt-5-nano by default
   - JSON mode for structured output
   - Temperature 0 for consistency
   - Fast response times

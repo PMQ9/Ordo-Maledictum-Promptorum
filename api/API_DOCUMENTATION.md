@@ -55,7 +55,7 @@ Process user input through the complete intent segregation pipeline.
 **Request Body:**
 ```json
 {
-  "user_input": "Find me security experts for a supply chain project with budget $20000",
+  "user_input": "What is 2 + 2?",
   "user_id": "user_123",
   "session_id": "session_456"
 }
@@ -67,12 +67,10 @@ Process user input through the complete intent segregation pipeline.
   "request_id": "550e8400-e29b-41d4-a716-446655440000",
   "status": "completed",
   "trusted_intent": {
-    "action": "find_experts",
-    "topic_id": "supply_chain",
-    "expertise": ["security"],
-    "constraints": {
-      "max_budget": 20000
-    },
+    "action": "math_question",
+    "topic_id": "arithmetic_addition",
+    "expertise": [],
+    "constraints": {},
     "content_refs": [],
     "metadata": {
       "id": "...",
@@ -82,13 +80,12 @@ Process user input through the complete intent segregation pipeline.
     }
   },
   "result": {
-    "experts": [
-      {
-        "id": "expert_1",
-        "name": "Alice Smith",
-        "expertise": ["security", "supply_chain"],
-        "rate": 150
-      }
+    "answer": "4",
+    "explanation": "2 + 2 = 4. This is basic arithmetic addition.",
+    "steps": [
+      "Start with the first number: 2",
+      "Add the second number: 2",
+      "Result: 4"
     ]
   },
   "message": "Intent processed successfully",
@@ -175,10 +172,10 @@ Check the status of an approval request.
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "status": "pending",
   "intent": {
-    "action": "find_experts",
+    "action": "math_question",
     ...
   },
-  "reason": "Parser conflict: parsers disagree on expertise area",
+  "reason": "Parser conflict: parsers disagree on question interpretation",
   "created_at": "2024-01-15T10:30:00Z",
   "decision": null
 }
@@ -190,12 +187,12 @@ Check the status of an approval request.
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "status": "approved",
   "intent": { ... },
-  "reason": "Parser conflict: parsers disagree on expertise area",
+  "reason": "Parser conflict: parsers disagree on question interpretation",
   "created_at": "2024-01-15T10:30:00Z",
   "decision": {
     "approved": true,
     "approver_id": "admin_789",
-    "reason": "Intent looks valid after manual review",
+    "reason": "Math question is valid after manual review",
     "decided_at": "2024-01-15T10:35:00Z"
   }
 }
@@ -217,7 +214,7 @@ Submit an approval decision for a pending request.
 {
   "approved": true,
   "approver_id": "admin_789",
-  "reason": "Intent looks valid after manual review"
+  "reason": "Math question is valid after manual review"
 }
 ```
 
@@ -266,7 +263,7 @@ GET /api/ledger/query?user_id=user_123&limit=50
       "user_id": "user_123",
       "session_id": "session_456",
       "timestamp": "2024-01-15T10:30:00Z",
-      "user_input": "Find security experts...",
+      "user_input": "What is 2 + 2?",
       "malicious_blocked": false,
       "voting_confidence": "HighConfidence",
       "comparison_decision": "Approved",
@@ -297,7 +294,7 @@ Get a specific ledger entry by ID.
   "session_id": "session_456",
   "user_id": "user_123",
   "timestamp": "2024-01-15T10:30:00Z",
-  "user_input": "Find security experts for supply chain project",
+  "user_input": "What is 2 + 2?",
   "user_input_hash": "a1b2c3...",
   "malicious_score": null,
   "malicious_blocked": false,
@@ -387,10 +384,8 @@ enable_openai = false
 enable_ollama = false
 
 [provider]
-allowed_actions = ["find_experts", "summarize", "draft_proposal"]
-allowed_expertise = ["ml", "security", "embedded", "cloud"]
-max_budget = 50000
-max_results = 20
+allowed_actions = ["math_question"]
+allowed_expertise = []
 require_human_approval = false
 
 [notifications]
@@ -455,7 +450,7 @@ docker run -p 3000:3000 \
 curl -X POST http://localhost:3000/api/process \
   -H "Content-Type: application/json" \
   -d '{
-    "user_input": "Find ML experts for my project",
+    "user_input": "What is 5 times 7?",
     "user_id": "user_123",
     "session_id": "sess_456"
   }'
@@ -475,7 +470,7 @@ curl -X POST http://localhost:3000/api/approvals/550e8400-e29b-41d4-a716-4466554
   -d '{
     "approved": true,
     "approver_id": "admin_789",
-    "reason": "Looks good"
+    "reason": "Math question is valid"
   }'
 ```
 

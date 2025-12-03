@@ -5,9 +5,9 @@
 
 #[cfg(feature = "caching")]
 use intent_redis_cache::RedisCache;
+use intent_schema::cache::cache_keys;
 #[cfg(feature = "caching")]
 use intent_schema::cache::CacheBackend;
-use intent_schema::cache::cache_keys;
 #[cfg(feature = "caching")]
 use std::sync::OnceLock;
 #[cfg(feature = "caching")]
@@ -31,10 +31,8 @@ async fn get_cache() -> Option<&'static CacheState> {
 ///
 /// Falls back to returning the provided prompt if caching is unavailable.
 pub async fn get_cached_system_prompt(
-    #[allow(unused_variables)]
-    prompt_key: &str,
-    #[allow(unused_variables)]
-    ttl_secs: usize,
+    #[allow(unused_variables)] prompt_key: &str,
+    #[allow(unused_variables)] ttl_secs: usize,
     build_prompt: impl Fn() -> String,
 ) -> String {
     #[cfg(feature = "caching")]
@@ -70,7 +68,11 @@ pub async fn get_cached_system_prompt(
                         tracing::debug!("Failed to cache system prompt: {}", e);
                         // Silently fail - we'll just recompute next time
                     } else {
-                        tracing::debug!("System prompt cached: {} (TTL: {}s)", prompt_key, ttl_secs);
+                        tracing::debug!(
+                            "System prompt cached: {} (TTL: {}s)",
+                            prompt_key,
+                            ttl_secs
+                        );
                     }
                 }
 
@@ -154,10 +156,17 @@ pub async fn cache_parser_result(
             if let Some(cache) = cache_lock.as_ref() {
                 let cache_key = cache_keys::parser_result_key(input_hash);
                 if let Ok(result_bytes) = result.as_bytes().to_vec() {
-                    if let Err(e) = cache.set(&cache_key, result_bytes, cache_keys::PARSER_RESULT_TTL_SECS).await {
+                    if let Err(e) = cache
+                        .set(&cache_key, result_bytes, cache_keys::PARSER_RESULT_TTL_SECS)
+                        .await
+                    {
                         tracing::debug!("Failed to cache parser result: {}", e);
                     } else {
-                        tracing::debug!("Parser result cached for input: {} (TTL: {}s)", input_hash, cache_keys::PARSER_RESULT_TTL_SECS);
+                        tracing::debug!(
+                            "Parser result cached for input: {} (TTL: {}s)",
+                            input_hash,
+                            cache_keys::PARSER_RESULT_TTL_SECS
+                        );
                     }
                 }
             }
