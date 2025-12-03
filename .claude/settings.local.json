@@ -29,7 +29,9 @@
       "Bash(set)",
       "Bash(cargo fmt:*)",
       "Bash(docker ps:*)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "Bash(pip install:*)",
+      "Bash(cargo run:*)"
     ],
     "deny": [],
     "ask": []
