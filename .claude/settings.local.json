@@ -38,7 +38,8 @@
       "Bash(docker inspect:*)",
       "Bash(PGPASSWORD=intent_pass psql:*)",
       "Bash(pkill:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(timeout 5 bash:*)"
     ],
     "deny": [],
     "ask": []

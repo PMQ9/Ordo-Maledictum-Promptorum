@@ -40,6 +40,10 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Load .env file if it exists (for API keys and secrets)
+    // Silently ignore if .env doesn't exist (allows production with system env vars)
+    let _ = dotenvy::dotenv();
+
     // Initialize tracing/logging
     init_tracing();
     eprintln!("[STARTUP] Initializing tracing...");

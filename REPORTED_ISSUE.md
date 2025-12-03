@@ -1,7 +1,7 @@
-# E2E Test Infrastructure Issues - RESOLVED
+# E2E Test Infrastructure Issues - PARTIALLY RESOLVED
 
 **Date**: December 2, 2025
-**Status**: FULLY RESOLVED - All configuration issues fixed, E2E tests now executable
+**Status**: PARTIALLY RESOLVED - Scenario 1 succeeds, Scenarios 2 & 3 have Claude parser issues
 
 ## Summary
 
@@ -69,19 +69,66 @@ Created comprehensive end-to-end test infrastructure for testing the full intent
 - Added clear comments about requiring at least one parser
 **Impact**: E2E tests now successfully execute with Claude parser
 
+### 5. Processing Engine Missing Claude API Key - FIXED
+**File**: `api/src/state.rs` (line 114)
+**Problem**: ProcessingEngine initialized with default config (no Claude API key)
+**Error**: "Processing failed: Claude API key not configured"
+**Fix Applied**:
+- Changed from `ProcessingEngine::new()` to `ProcessingEngine::with_config(engine_config)`
+- Pass Claude API key from config.parsers.claude_api_key
+- Pass Claude model from config.parsers.claude_model
+**Impact**: Processing engine now successfully executes math questions via Claude API
+
+### 6. Python Test Script Status Parsing Bug - FIXED
+**File**: `run_e2e_test.py` (lines 232-245)
+**Problem**: Script looked for non-existent `approved` field, always returned "PENDING" for successful requests
+**Error**: Scenario 1 showed "PENDING - Requires Human Approval" despite successful execution
+**Fix Applied**:
+- Removed `approved` field lookup
+- Now directly maps API `status` field: "Completed" → "SUCCESS - Completed"
+- Properly handles all status values: Completed, PendingApproval, Blocked, Denied
+**Impact**: Test results now correctly show "COMPLETED" for successful scenarios
+
 ## Execution Verification
 
-**VERIFIED WORKING** (December 2, 2025):
-1. PostgreSQL database: Running on port 5432 with correct credentials
-2. API server: Starts successfully on port 8080
-3. E2E tests: Execute with the following command:
-   ```bash
-   python run_e2e_test.py
-   ```
-4. Test Results:
-   - Scenario 1 (Valid Math): PENDING - Human Approval (expected with single parser)
-   - Scenario 2 (Injection Attack): Blocked by malicious detection (expected)
-   - Scenario 3 (Policy Violation): Rejected (expected)
+**CURRENT STATUS** (December 3, 2025 - After All Fixes):
+1. PostgreSQL database: ✅ Running on port 5432 with correct credentials
+2. API server: ✅ Starts successfully on port 8080
+3. E2E tests: Execute with `python run_e2e_test.py`
+4. **Test Results**:
+   - **Scenario 1 (Valid Math "What is 15 times 7?")**: ✅ **FULLY SUCCESSFUL - COMPLETED**
+     - Parser: ✅ Claude succeeded (846ms, confidence 0.95)
+     - Voting: ✅ Succeeded (low confidence due to single parser)
+     - Comparator: ✅ math_question allowed
+     - **Execution: ✅ Successfully completed in 798ms**
+     - Ledger: ✅ Entry saved
+     - **Status**: ✅ COMPLETED (shown correctly by test script after bug fix)
+     - Total latency: ~3.9 seconds
+   - **Scenario 2 (Injection Attack)**: ❌ **PARSER FAILURE**
+     - Error: "Failed to parse Claude JSON: expected value at line 1 column 1"
+     - Cause: Claude API returns non-JSON content (likely safety refusal or error message)
+   - **Scenario 3 (History Question)**: ❌ **PARSER FAILURE**
+     - Error: "Failed to parse Claude JSON: expected value at line 1 column 1"
+     - Cause: Same as Scenario 2
+
+## Outstanding Issues
+
+### Claude Parser Non-JSON Responses
+**Files**: `core/parsers/src/claude.rs`
+**Problem**: For certain inputs (injection attacks, policy violations), Claude returns text content that is not valid JSON
+**Symptoms**:
+- API returns 200 OK with valid ClaudeResponse structure
+- But the text content inside is not the expected JSON intent format
+- Parser fails with "expected value at line 1 column 1"
+**Possible Causes**:
+1. Claude's safety systems refusing to process certain inputs
+2. Claude returning error/refusal messages instead of structured JSON
+3. Prompt engineering issue - Claude not following JSON format instructions
+**Next Steps**:
+- Add debug logging to see raw Claude responses
+- Improve error handling to extract Claude's actual response text
+- Consider adjusting system prompt to be more explicit about JSON format requirements
+- May need to handle Claude refusals gracefully rather than treating as parser failure
 
 ## Technical Notes
 
