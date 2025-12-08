@@ -56,6 +56,6 @@ regex = "1.10"
 tower = { version = "0.4", features = ["util"] }
 tower-http = { version = "0.5", features = ["cors", "trace"] }
 # JSON Schema
-jsonschema = "0.18"
+jsonschema = "0.37"
 # Redis
 redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
